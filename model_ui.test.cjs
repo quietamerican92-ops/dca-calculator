@@ -9,7 +9,7 @@ new vm.Script(main);
 const workerMarker = '<script type="text/plain" id="simulation-worker">';
 const workerStart = html.indexOf(workerMarker) + workerMarker.length;
 const workerSource = html.slice(workerStart, html.indexOf('</script>', workerStart));
-assert.match(html, /현재 전략 · \$\{rank\} 종료경로/);
+assert.match(html, /현재 전략 · \$\{rank\} 경로/);
 assert.match(html, /같은 경로의 VOO 100%/);
 assert.match(html, /강제 폭락 시점/);
 assert.match(html, /그래프에 표시할 실제 경로/);
@@ -20,43 +20,52 @@ const worker = { self: { postMessage: m => { if (m.type === 'done') result = m.r
 vm.createContext(worker);
 vm.runInContext(workerSource, worker);
 
-const elements = new Map();
 function classes() {
   const set = new Set();
   return { add: name => set.add(name), remove: name => set.delete(name), contains: name => set.has(name), toggle: (name, on) => on ? set.add(name) : set.delete(name) };
 }
 const stub = (tag, attrs = '') => ({
-  tag, value: attrs.match(/\bvalue="([^"]*)"/)?.[1] ?? '',
+  tag, tagName: tag.toUpperCase(), value: attrs.match(/\bvalue="([^"]*)"/)?.[1] ?? '',
   checked: /\bchecked\b/.test(attrs), disabled: /\bdisabled\b/.test(attrs), hidden: /\bhidden\b/.test(attrs),
   textContent: '', innerHTML: '', className: '', style: {}, dataset: {}, classList: classes(),
   setAttribute() {}, removeAttribute() {}, addEventListener() {}, focus() {}, scrollIntoView() {},
 });
-for (const match of html.matchAll(/<([a-z][\w-]*)\b([^>]*\bid="([^"]+)"[^>]*)>/gi)) {
-  const [, tag, attrs, id] = match;
-  assert.ok(!elements.has(id), `Duplicate element ID: ${id}`);
-  elements.set(id, stub(tag, attrs));
-}
-for (const match of html.matchAll(/<select\b[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/select>/g)) {
-  const opts = [...match[2].matchAll(/<option\b([^>]*)>/g)];
-  const selected = opts.find(o => /\bselected\b/.test(o[1])) ?? opts[0];
-  elements.get(match[1]).value = selected[1].match(/value="([^"]*)"/)[1];
-}
 // The rows for each ETF are rendered at runtime, so their elements exist only once the page asks for them.
 const runtimeId = /^(pt|pl|ps|pi|w|cmpl|cmp|ht|hl|hs|hi|hv|hb)-r\d+$|^p-[A-Z0-9.-]+-(kind|under|beta|lev|alpha|fee|div|freq)$|^pw-[A-Z0-9.-]+$/;
-const element = id => {
-  if (!elements.has(id) && runtimeId.test(id)) elements.set(id, stub('input'));
-  assert.ok(elements.has(id), `Missing element: ${id}`);
-  return elements.get(id);
-};
-element('configForm').querySelectorAll = () => [...elements.values()].filter(e => e.tag === 'input');
-const ui = {
-  document: { getElementById: element, querySelectorAll: () => [], body: { classList: classes() }, documentElement: {}, activeElement: null },
-  matchMedia: () => ({ matches: true }),
-};
-vm.createContext(ui);
-const startup = 'renderEtfLists();updateStressControls();runSimulation({initial:true});';
+const startup = 'updateStressControls();runSimulation({initial:true});';
 assert.ok(main.includes(startup));
-vm.runInContext(main.replace(startup, 'renderEtfLists();updateStressControls();'), ui);
+// Loads the page script against a fresh fake document. `storage` stands in for localStorage.
+function boot(storage) {
+  const elements = new Map();
+  for (const match of html.matchAll(/<([a-z][\w-]*)\b([^>]*\bid="([^"]+)"[^>]*)>/gi)) {
+    const [, tag, attrs, id] = match;
+    assert.ok(!elements.has(id), `Duplicate element ID: ${id}`);
+    elements.set(id, stub(tag, attrs));
+  }
+  for (const match of html.matchAll(/<select\b[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/select>/g)) {
+    const opts = [...match[2].matchAll(/<option\b([^>]*)>/g)];
+    const selected = opts.find(o => /\bselected\b/.test(o[1])) ?? opts[0];
+    elements.get(match[1]).value = selected[1].match(/value="([^"]*)"/)[1];
+    elements.get(match[1]).innerHTML = match[2];
+  }
+  const element = id => {
+    if (!elements.has(id) && runtimeId.test(id)) elements.set(id, stub('input'));
+    assert.ok(elements.has(id), `Missing element: ${id}`);
+    return elements.get(id);
+  };
+  element('configForm').querySelectorAll = () => [...elements.values()].filter(e => e.tag === 'input');
+  const ui = {
+    document: { getElementById: element, querySelectorAll: () => [], body: { classList: classes() }, documentElement: {}, activeElement: null },
+    matchMedia: () => ({ matches: true }),
+    localStorage: storage,
+  };
+  vm.createContext(ui);
+  vm.runInContext(main.replace(startup, 'updateStressControls();'), ui);
+  return { ui, element };
+}
+const saved = new Map();
+const storage = { getItem: key => saved.has(key) ? saved.get(key) : null, setItem: (key, value) => { saved.set(key, String(value)); } };
+const { ui, element } = boot(storage);
 const set = (id, value) => { element(id).value = String(value); };
 const state = code => vm.runInContext(code, ui);
 const tickers = cfg => Array.from(cfg.etfs, e => e.ticker);
@@ -84,7 +93,7 @@ assert.equal(defaults.marketPreset, 'balanced');
 assert.equal(defaults.stressMonth, 90);
 assert.equal(defaults.stressDrop, 0);
 assert.equal(element('marketPreset').value, 'balanced');
-assert.equal(element('pathPercentile').value, '0.5');
+assert.equal(element('pathPercentile').value, '50');
 assert.match(element('qldGrowthHint').textContent, /QLD 연 9\.9%/);
 assert.match(element('qldGrowthHint').textContent, /VOO 연 7\.6%/);
 assert.equal(ui.validate(defaults).length, 0);
@@ -370,4 +379,94 @@ assert.equal(element('strategyResultTitle').textContent, 'JEPQ·QQQI 배당 목�
 assert.match(element('strategyResultDescription').textContent, /커버드콜 ETF를 합친 월 세후배당/);
 assert.match(element('conditionSummary').textContent, /현재 보유 100만원/);
 assert.match(element('conditionSummary').textContent, /VOO 42 \/ QLD 17 \/ JEPQ 25 \/ SCHD 8 \/ QQQI 8/);
+
+// The headline can be read at an earlier point in time and for another path rank.
+vm.runInContext("viewMode='nominal'", ui);
+const flat = withEtfs({ ...defaults, sims: 5, years: 3, initial: 0, monthly: 100, strategyMode: 'none', inflation: 0,
+  muQ: 0, volQ: 0, muS: 0, volS: 0, fxOn: false, borrow: 0, whTax: 0, cgTax: 0 },
+  e => ({ weight: e.ticker === 'VOO' ? 100 : 0, div: 0, fee: 0, alpha: 0 }));
+render(flat);
+assert.equal(element('resultTitle').textContent, '3년 뒤 세후 자산 전망');
+assert.equal(element('mainValue').textContent, '3,600만원');
+assert.equal(element('heroLabel').textContent, '일괄 매도 후 예상 자산 · 중앙값');
+assert.equal(element('viewYear').max, '3');
+assert.equal(element('viewYear').value, '3');
+assert.equal(element('viewYearValue').textContent, '3년 뒤 · 투자 기간 말');
+assert.equal(element('riskBasis').textContent, '중앙 결과를 만든 하나의 동일 경로 기준입니다.');
+state('viewYears=1');
+ui.renderAll();
+assert.equal(element('resultTitle').textContent, '1년 뒤 세후 자산 전망');
+assert.equal(element('mainValue').textContent, '1,200만원');
+assert.equal(element('investedValue').textContent, '1,200만원');
+assert.equal(element('mainMultiple').textContent, '명목 원금 대비 1.0배');
+assert.match(element('mainSub').textContent, /1년 시점에 모두 팔았다고 가정/);
+assert.equal(element('rangeValue').textContent, '1,200만원 – 1,200만원');
+assert.equal(element('viewYear').value, '1');
+assert.equal(element('viewYearValue').textContent, '1년 뒤');
+assert.equal(element('pathPrincipalValue').textContent, '1,200만원');
+assert.equal(element('pathOutcomeLabel').textContent, '중앙 경로 · 1년 시점 자산');
+assert.match(element('pathDescription').textContent, /세로 점선은 고른 결과 시점/);
+state('viewP=.9');
+ui.renderAll();
+assert.equal(element('heroLabel').textContent, '일괄 매도 후 예상 자산 · 상위 10% 경로');
+assert.equal(element('viewPercentileValue').textContent, '상위 10% 경로');
+assert.equal(element('viewPercentile').value, '90');
+assert.equal(element('pathPercentile').value, '90');
+assert.match(element('riskBasis').textContent, /1년 시점 상위 10% 경로/);
+assert.match(element('assetSummaryTitle').textContent, /1년 시점 상위 10% 경로/);
+// Choosing the last year again is the same as the end of the period.
+state('viewYears=3;viewP=.5');
+ui.renderAll();
+assert.equal(state('viewYears'), null);
+assert.equal(element('mainValue').textContent, '3,600만원');
+assert.equal(element('assetSummaryTitle').textContent, '중앙 결과의 ETF별 평가액과 취득원가');
+// On random paths a better rank at the chosen time never shows less money, and the headline is that path.
+render({ ...withEtfs(defaults, () => ({})), sims: 60, years: 3, strategyMode: 'none' });
+const worth = rank => state(`valueAt(pickAt(12,${rank}),12)`);
+assert.ok(worth(.1) < worth(.5) && worth(.5) < worth(.9));
+state('viewYears=1;viewP=.9');
+ui.renderAll();
+assert.equal(element('mainValue').textContent, state('fmtMoney(valueAt(pickAt(12,.9),12))'));
+assert.equal(element('investedValue').textContent, '1,200만원');
+state('viewYears=null;viewP=.5');
+
+// What was entered is saved and comes back on the next visit.
+ui.resetEtfState();
+ui.renderEtfLists();
+ui.setRowTicker('plan', state('plan[2].id'), 'QQQI');
+state("plan[0].weight='40';plan[0].compare='35'");
+const keptHolding = ui.addRow('holdings', 'SCHD');
+keptHolding.value = '1500';
+keptHolding.basis = '1200';
+ui.syncDynamicField({ value: '0.5', dataset: { ticker: 'SCHD', param: 'beta' } });
+set('monthly', 250);
+set('years', 20);
+set('stressMonth', 200);
+set('strategyMode', 'month');
+set('postMode', 'manual');
+ui.refreshEtfUi();
+ui.syncDynamicField({ value: '80', dataset: { post: 'SCHD' } });
+set('ccDividend', 'etf:SCHD');
+element('fxOn').checked = false;
+ui.setDirty();
+const before = ui.getConfig();
+const comparable = config => JSON.stringify(config, (key, value) => key === 'color' ? undefined : value);
+const revisit = boot(storage);
+assert.equal(comparable(revisit.ui.getConfig()), comparable(before));
+assert.deepEqual(Array.from(revisit.ui.getConfig().etfs, e => e.ticker), ['VOO', 'QLD', 'QQQI', 'SCHD']);
+assert.equal(revisit.ui.getConfig().ccDividend, 3);
+assert.equal(revisit.ui.getConfig().stressMonth, 200);
+assert.equal(revisit.element('postMode').value, 'manual');
+assert.match(revisit.element('postWeights').innerHTML, /id="pw-SCHD"[^>]*value="80"/);
+assert.match(revisit.element('holdingList').innerHTML, /value="1500"/);
+assert.match(revisit.element('customAllocation').innerHTML, /value="35"/);
+assert.equal(revisit.ui.validate(revisit.ui.getConfig()).length, 0);
+// Unreadable or outdated saved data is ignored, and a fresh browser starts from the defaults.
+saved.set('dca-settings-v1', '{not json');
+assert.deepEqual(Array.from(boot(storage).ui.getConfig().etfs, e => e.ticker), ['VOO', 'QLD', 'JEPQ']);
+saved.set('dca-settings-v1', JSON.stringify({ version: 1, plan: [], holdings: [] }));
+assert.deepEqual(Array.from(boot(storage).ui.getConfig().etfs, e => e.ticker), ['VOO', 'QLD', 'JEPQ']);
+const noStorage = boot({ getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } });
+assert.equal(noStorage.ui.getConfig().monthly, 100);
+noStorage.ui.setDirty();
 console.log('model UI integration tests passed');

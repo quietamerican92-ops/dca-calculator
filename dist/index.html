@@ -239,6 +239,20 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
 .strategy-metrics small{display:block;color:var(--sub);font-size:.75rem;margin-top:4px}
 .mobile-run{display:none}
 .mobile-tabs{display:none}
+.etf-zone{--zone:var(--primary);margin:14px 8px 0;padding:14px 10px 12px;border:1px solid color-mix(in srgb,var(--zone) 30%,var(--line));border-left:4px solid var(--zone);border-radius:14px;background:color-mix(in srgb,var(--zone) 5%,var(--panel))}
+.etf-zone.held{--zone:var(--good)}
+.etf-zone+fieldset:not(.etf-zone){border-top:0}
+.etf-zone legend{float:left;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.etf-zone legend+*{clear:both}
+.zone-chip{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--zone);color:var(--panel);white-space:nowrap}
+.etf-zone .etf-card{background:var(--panel)}
+.etf-zone .add-button{color:var(--zone);border-color:color-mix(in srgb,var(--zone) 45%,var(--line-strong))}
+.etf-zone .add-button:hover:not(:disabled){background:color-mix(in srgb,var(--zone) 10%,var(--panel));border-color:var(--zone)}
+.view-controls{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:17px;padding-top:15px;border-top:1px solid var(--line)}
+.view-control label{display:flex;justify-content:space-between;gap:10px;color:var(--sub);font-size:.78rem;font-weight:700;margin-bottom:4px}
+.view-control output{color:var(--ink);font-weight:700;white-space:nowrap}
+.view-control input[type=range]{width:100%;height:30px;accent-color:var(--primary);cursor:pointer}
+.view-control small{display:block;color:var(--muted);font-size:.68rem;margin-top:1px}
 .etf-list{display:grid;gap:10px}
 .etf-list:empty{display:none}
 .etf-card{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--panel-2)}
@@ -306,7 +320,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
   .app{padding-left:12px;padding-right:12px}.brand-mark{width:38px;height:38px;border-radius:11px}.topbar p{font-size:.86rem}
   .field-grid{grid-template-columns:1fr 1fr}.summary-grid{grid-template-columns:1fr 1fr}.hero-card{padding:20px;grid-column:1/-1}
   .metric-card{min-height:104px;padding:15px}.metric-card strong{font-size:1.14rem}.result-top{display:block}.view-toggle{display:inline-flex;margin-top:10px}
-  .section-card{padding:17px}.section-head{display:block}.section-chip{display:inline-block;margin-top:8px}.chartbox{height:315px}.chartbox.small{height:245px}.path-controls{grid-template-columns:1fr}.path-controls .path-control:first-child{grid-column:auto}.path-compare{grid-template-columns:1fr}.path-compare-arrow{display:none}.path-compare-item:last-child{text-align:left}
+  .section-card{padding:17px}.section-head{display:block}.section-chip{display:inline-block;margin-top:8px}.chartbox{height:315px}.chartbox.small{height:245px}.path-controls{grid-template-columns:1fr}.path-controls .path-control:first-child{grid-column:auto}.path-compare{grid-template-columns:1fr}.path-compare-arrow{display:none}.path-compare-item:last-child{text-align:left}.view-controls{grid-template-columns:1fr}
   .risk-list{grid-template-columns:1fr 1fr}.model-grid{grid-template-columns:1fr}.range-box{display:block}.range-box .range-copy{text-align:left;margin-top:7px;max-width:none}
 }
 @media(max-width:390px){.field-grid,.assumption-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.summary-grid{grid-template-columns:1fr}.hero-card{grid-column:auto}.risk-list{grid-template-columns:1fr}}
@@ -342,11 +356,11 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
     <aside class="control-panel" id="settingsPanel" aria-label="시뮬레이션 설정">
       <div class="control-head">
         <h2>투자 조건</h2>
-        <p>필요한 값만 바꾸고 바로 비교해 보세요.</p>
+        <p>필요한 값만 바꾸면 돼요. 입력한 조건은 이 기기에 자동으로 저장됩니다.</p>
       </div>
       <form id="configForm" novalidate>
-        <fieldset>
-          <legend>앞으로 투자할 ETF와 비중</legend>
+        <fieldset class="etf-zone plan">
+          <legend><span class="zone-chip">새 투자금</span>앞으로 투자할 ETF와 비중</legend>
           <p class="details-copy">티커나 이름 일부를 입력하면 후보가 뜹니다. 목록에 없는 ETF도 직접 입력할 수 있어요. 비중은 매달 투자금과 지금 추가 투자금에만 적용합니다.</p>
           <div class="etf-list" id="planList"></div>
           <p class="list-note" id="planNote" role="status"></p>
@@ -355,8 +369,8 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
           <div class="allocation-status" id="allocMsg" aria-live="polite"></div>
           <p class="fee-note">보수·분배율은 공개자료 기준 대략값이고, 지수 민감도·옵션 프리미엄은 모델용 추정치입니다. 상세 가정에서 직접 고칠 수 있어요.</p>
         </fieldset>
-        <fieldset>
-          <legend>현재 보유 중인 ETF</legend>
+        <fieldset class="etf-zone held">
+          <legend><span class="zone-chip">보유분</span>현재 보유 중인 ETF</legend>
           <p class="details-copy" id="holdingsHelp">지금 보유한 ETF를 골라 원화 평가액을 입력하세요. 앞으로 투자할 ETF와 달라도 되고, 투자 비중과 별개로 그대로 유지됩니다.</p>
           <div class="etf-list" id="holdingList"></div>
           <p class="list-note" id="holdingNote" role="status"></p>
@@ -525,6 +539,18 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
             <div><span class="card-label">80% 예상 범위</span><strong id="rangeValue">—</strong></div>
             <div class="range-copy">가정이 맞다는 조건에서 10개 경로 중 약 8개가 이 범위에 들어옵니다.</div>
           </div>
+          <div class="view-controls" aria-label="결과 보기 조건">
+            <div class="view-control">
+              <label for="viewYear"><span>결과 시점</span><output id="viewYearValue">투자 기간 말</output></label>
+              <input type="range" id="viewYear" min="1" max="15" value="15" step="1">
+              <small>몇 년 뒤의 결과를 볼지 고릅니다.</small>
+            </div>
+            <div class="view-control">
+              <label for="viewPercentile"><span>보고 싶은 경로</span><output id="viewPercentileValue">중앙</output></label>
+              <input type="range" id="viewPercentile" min="1" max="99" value="50" step="1">
+              <small>왼쪽은 나쁜 결과, 오른쪽은 좋은 결과입니다.</small>
+            </div>
+          </div>
         </article>
         <article class="card metric-card"><span class="card-label">시작 자산 + 신규 투자금</span><strong id="investedValue">—</strong><small>현재 평가액 + 추가·월 납입액</small></article>
         <article class="card metric-card"><span class="card-label">비교 기준금액 미만 비율</span><strong id="lossValue">—</strong><small>시작 자산 + 신규 투자금 대비 · 세후 명목</small></article>
@@ -542,7 +568,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
         <div class="strategy-metrics">
           <div class="risk-item"><span id="switchProbabilityLabel">기간 내 배당 목표 도달 확률</span><strong id="switchProbability">—</strong><small id="switchCount"></small></div>
           <div class="risk-item"><span>도달한 경로의 중앙 시점</span><strong id="switchMedian">—</strong><small>미도달 경로는 시점 계산에서 제외</small></div>
-          <div class="risk-item"><span>최종자산 중앙 결과의 도달 시점</span><strong id="centralSwitch">—</strong><small id="centralSwitchNote"></small></div>
+          <div class="risk-item"><span id="centralSwitchLabel">최종자산 중앙 결과의 도달 시점</span><strong id="centralSwitch">—</strong><small id="centralSwitchNote"></small></div>
         </div>
         <p class="strategy-help" id="strategyOutcomeNote"></p>
       </section>
@@ -554,9 +580,9 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
         </div>
         <div class="path-controls" aria-label="경로와 폭락 시나리오 선택">
           <div class="path-control">
-            <label for="pathPercentile"><span>그래프에 표시할 실제 경로</span></label>
-            <select id="pathPercentile"><option value="0.01">하위 1% 경로</option><option value="0.1">하위 10% 경로</option><option value="0.25">하위 25% 경로</option><option value="0.5" selected>중앙 경로</option><option value="0.75">상위 25% 경로</option><option value="0.9">상위 10% 경로</option><option value="0.95">상위 5% 경로</option><option value="0.99">상위 1% 경로</option></select>
-            <small>최종 세후 총자산 순위로 실제 시뮬레이션 경로 하나를 고릅니다.</small>
+            <label for="pathPercentile"><span>그래프에 표시할 실제 경로</span><output id="pathPercentileValue">중앙</output></label>
+            <input type="range" id="pathPercentile" min="1" max="99" value="50" step="1">
+            <small>맨 위 ‘보고 싶은 경로’와 같은 설정입니다. 고른 결과 시점의 세후 자산 순위로 실제 경로 하나를 고릅니다.</small>
           </div>
           <div class="path-control">
             <label for="stressMonth"><span>강제 폭락 시점</span><output id="stressMonthValue">7년 6개월</output></label>
@@ -598,7 +624,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
           <table class="compact-table" id="compareTable"><caption class="sr-only">현재 포트폴리오와 VOO 100% 비교</caption></table>
         </section>
         <section class="card section-card">
-          <div class="section-head"><div><h3>위험과 세금</h3><p>중앙 결과를 만든 하나의 동일 경로 기준입니다.</p></div></div>
+          <div class="section-head"><div><h3>위험과 세금</h3><p id="riskBasis">중앙 결과를 만든 하나의 동일 경로 기준입니다.</p></div></div>
           <div class="risk-list">
             <div class="risk-item"><span>연평균 운용수익률 <abbr title="외부 납입금 영향을 제거한 시간가중수익률. 최종 일괄매도 세금은 제외합니다.">TWR</abbr></span><strong id="twrValue">—</strong></div>
             <div class="risk-item"><span>투자 중 최대 하락폭 <abbr title="이전 고점에서 가장 크게 떨어진 비율">MDD</abbr></span><strong id="mddValue">—</strong></div>
@@ -626,7 +652,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
       </details>
 
       <details class="result-details">
-        <summary>중앙 결과의 ETF별 평가액과 취득원가</summary>
+        <summary><span id="assetSummaryTitle">중앙 결과의 ETF별 평가액과 취득원가</span></summary>
         <div class="details-content">
           <p class="details-copy">최종 양도세를 빼기 전 자산별 평가액입니다. 취득원가는 외부 투자금·배당 재투자·리밸런싱 매수를 포함하므로 평가액보다 크다고 해서 외부 투자원금 전부에 손실이 났다는 뜻은 아닙니다. 누적 배당 재투자액은 재투자한 주식에서 다시 나온 배당까지 반복 집계한 현금흐름이며, 평가액에 이미 포함되어 있으므로 평가액과 더하거나 별도 원금처럼 비교하지 않습니다.</p>
           <div class="table-scroll"><table id="assetTable"><caption class="sr-only">중앙 결과의 ETF별 평가액과 취득원가</caption></table></div>
@@ -1196,6 +1222,50 @@ function refreshEtfUi(){
   $('basisHelp').hidden=!holdings.length;
   syncStrategyMode();renderParams();renderDestinations();renderPostWeights();updateAllocation();updateGrowthHint()
 }
+// The form is kept in this browser so the next visit starts where the last one ended.
+const STORE_KEY='dca-settings-v1';
+const SAVED_FIELDS=['monthly','initial','years','growth','inflation','reinvest','rebal','sims','strategyMode','dividendTarget','switchAfterMonths','postMode','marketPreset','muQ','volQ','muS','volS','rho','borrow','fxMu','fxVol','fxCorr','whTax','cgTax','deduction','seed','stressDrop','stressMonth'];
+function saveSettings(){
+  try{
+    const fields={};for(const id of SAVED_FIELDS)fields[id]=$(id).value;
+    localStorage.setItem(STORE_KEY,JSON.stringify({version:1,fields,fxOn:$('fxOn').checked,ccDividend:$('ccDividend').value,postCcDividend:$('postCcDividend').value,
+      plan:plan.map(({ticker,weight,compare})=>({ticker,weight,compare})),holdings:holdings.map(({ticker,value,basis})=>({ticker,value,basis})),
+      params:Object.fromEntries(universe().map(ticker=>[ticker,paramsOf(ticker)])),manualPost:Object.fromEntries(manualPost)}))
+  }catch(error){}
+}
+// A select only takes a saved value it still offers; other boxes take the saved text as is.
+function restoreValue(id,value){
+  const el=$(id);
+  if(typeof value!=='string'||(el.tagName==='SELECT'&&!el.innerHTML.includes(`value="${escapeHtml(value)}"`)))return;
+  el.value=value
+}
+// Puts saved rows and boxes back. Returns the payout choices, which can only be applied once their options exist.
+function loadSettings(){
+  let saved;
+  try{saved=JSON.parse(localStorage.getItem(STORE_KEY)||'null')}catch(error){return null}
+  if(!saved||saved.version!==1||!Array.isArray(saved.plan)||!Array.isArray(saved.holdings))return null;
+  const text=value=>value==null?'':String(value).slice(0,24);
+  const rowsOf=(list,make)=>{const seen=new Set(),rows=[];for(const item of list){const ticker=cleanTicker(item&&item.ticker);if(ticker&&!seen.has(ticker)){seen.add(ticker);rows.push(make(ticker,item))}}return rows};
+  const nextPlan=rowsOf(saved.plan,(ticker,item)=>({ticker,weight:text(item.weight),compare:text(item.compare)}));
+  const nextHoldings=rowsOf(saved.holdings,(ticker,item)=>({ticker,value:text(item.value),basis:text(item.basis)}));
+  if(!nextPlan.length||new Set([...nextPlan,...nextHoldings].map(row=>row.ticker)).size>MAX_ETFS)return null;
+  plan=nextPlan.map(newRow);holdings=nextHoldings.map(newRow);
+  const numberOr=value=>value==null?NaN:Number(value);
+  for(const [name,p] of Object.entries(saved.params||{})){
+    const ticker=cleanTicker(name);if(!ticker||!p)continue;
+    const base=paramsOf(ticker);
+    params.set(ticker,{kind:p.kind==='cc'?'cc':'core',under:p.under==='ndx'?'ndx':'sp',beta:numberOr(p.beta),lev:[1,2,3].includes(p.lev)?p.lev:base.lev,fee:numberOr(p.fee),div:numberOr(p.div),freq:[1,2,4,12].includes(p.freq)?p.freq:base.freq,alpha:numberOr(p.alpha)})
+  }
+  manualPost.clear();for(const [name,value] of Object.entries(saved.manualPost||{}))if(cleanTicker(name))manualPost.set(cleanTicker(name),text(value));
+  const fields=saved.fields||{};
+  for(const id of SAVED_FIELDS){
+    // The crash-month slider only reaches as far as the investment period that was just restored.
+    if(id==='stressMonth')$(id).max=String(Math.max(12,Math.round((number('years')||1)*12)));
+    restoreValue(id,fields[id])
+  }
+  if(typeof saved.fxOn==='boolean')$('fxOn').checked=saved.fxOn;
+  return {ccDividend:text(saved.ccDividend),postCcDividend:text(saved.postCcDividend)}
+}
 // Copies an edited row or per-ETF assumption box into state. Returns true for a per-ETF assumption.
 function syncDynamicField(target){
   const data=target&&target.dataset;if(!data)return false;
@@ -1339,7 +1409,7 @@ function updateStrategyControls(){
   }
 }
 function setDirty(){
-  updateAllocation();
+  updateAllocation();saveSettings();
   if(allocationWorkers.length||$('allocationCompareTable').innerHTML)cancelAllocationComparison(true);
   if(activeWorker)cancelRun('설정이 바뀌어 계산을 멈췄습니다.');
   if(lastResult){document.body.classList.add('stale');$('statusBadge').className='status-badge stale';$('statusBadge').textContent='재계산 필요';$('run').textContent='변경한 설정으로 다시 계산';$('mobileRun').textContent='변경한 설정으로 다시 계산'}
@@ -1374,37 +1444,67 @@ function runSimulation({initial=false,scroll=true}={}){
   worker.onerror=()=>{activeWorker=null;worker.terminate();setRunning(false);box.textContent='계산 엔진을 시작하지 못했습니다. 브라우저에서 이 파일을 다시 열어 주세요.';box.classList.add('show')};
   worker.postMessage({type:'run',config:cfg})
 }
-function sortedScenarioIndices(r){return Array.from({length:r.N},(_,i)=>i).sort((a,b)=>r.finNet[a]-r.finNet[b])}
+// What the results show: a point in time (null = end of the investment period) and a path rank.
+let viewYears=null,viewP=.5;
+function viewMonth(){const r=lastResult;return viewYears===null?r.months:Math.min(r.months,Math.max(1,Math.round(viewYears*12)))}
+function valueAt(s,month){const r=lastResult;return month===r.months?r.finNet[s]:r.paths[s*(r.months+1)+month]}
+function benchAt(s,month){const r=lastResult;return month===r.months?r.benchFinNet[s]:r.benchPaths[s*(r.months+1)+month]}
+function investedAt(month){const r=lastResult;if(month===r.months)return r.investedTotal;let total=r.startValue;for(let m=0;m<month;m++)total+=r.contrib[m];return total}
+// Scenario indices sorted by after-tax wealth at the given month; kept on the result so a new run starts clean.
+function orderAt(month){
+  const cache=lastResult.orderCache||(lastResult.orderCache=new Map());
+  let order=cache.get(month);
+  if(!order){order=Int32Array.from({length:lastResult.N},(_,i)=>i).sort((a,b)=>valueAt(a,month)-valueAt(b,month));cache.set(month,order)}
+  return order
+}
+function pickAt(month,p){return orderAt(month)[Math.round((lastResult.N-1)*p)]}
 function indexAt(p){return scenarioIndexMap[Math.round((lastResult.N-1)*p)]}
 function deflatorAt(month){return Math.pow(1+lastResult.inflation,month/12)}
 function displayEnd(value){return viewMode==='real'?value/deflatorAt(lastResult.months):value}
 function displayAt(value,month){return viewMode==='real'?value/deflatorAt(month):value}
+// The headline numbers for the chosen time and path. Cheap enough to run while a slider is being dragged.
+function renderHeadline(){
+  const r=lastResult,c=lastConfig;
+  if(viewYears!==null&&viewYears>=c.years)viewYears=null;
+  const month=viewMonth(),atEnd=month===r.months,sel=pickAt(month,viewP),low=pickAt(month,.1),high=pickAt(month,.9),rank=pathRankLabel(viewP);
+  const invested=investedAt(month),value=valueAt(sel,month),middle=viewP===.5;
+  $('resultTitle').textContent=`${fmtMonth(month)} 뒤 세후 자산 전망`;
+  $('heroLabel').textContent=`일괄 매도 후 예상 자산 · ${middle?'중앙값':`${rank} 경로`}${viewMode==='real'?' · 오늘 가치':''}`;
+  $('mainValue').textContent=fmtMoney(displayAt(value,month));
+  $('mainMultiple').textContent=`명목 원금 대비 ${(value/invested).toFixed(1)}배`;
+  $('mainMultiple').title='명목 세후 자산 ÷ 그 시점까지의 현재 평가액과 신규 투자금 합계';
+  $('mainSub').textContent=atEnd?`세전 ${fmtMoney(displayEnd(r.finGross[sel]))} · 예상 누적 세금 ${fmtMoney(displayEnd(r.taxTotal[sel]))}`:`투자 ${fmtMonth(month)} 시점에 모두 팔았다고 가정한 세후 금액`;
+  $('rangeValue').textContent=`${fmtMoney(displayAt(valueAt(low,month),month))} – ${fmtMoney(displayAt(valueAt(high,month),month))}`;
+  $('investedValue').textContent=fmtMoney(invested);
+  let below=0,ahead=0;
+  for(let s=0;s<r.N;s++){const v=valueAt(s,month);if(v<invested)below++;if(v>benchAt(s,month))ahead++}
+  const loss=below/r.N,beat=ahead/r.N;
+  $('lossValue').textContent=fmtPct(loss);$('lossValue').className=loss>.2?'negative':'';
+  $('beatValue').textContent=fmtPct(beat);$('beatValue').className=beat>.5?'positive':'';
+  if(viewMode==='nominal'){$('altValueLabel').textContent=middle?'오늘 가치 중앙값':'오늘 가치';$('altValue').textContent=fmtMoney(value/deflatorAt(month));$('altValueNote').textContent=`물가 ${c.inflation.toFixed(1)}% 반영`}
+  else{$('altValueLabel').textContent=middle?'명목 자산 중앙값':'명목 자산';$('altValue').textContent=fmtMoney(value);$('altValueNote').textContent='미래 시점의 원화 금액'}
+  $('viewYear').max=String(c.years);$('viewYear').value=String(atEnd?c.years:viewYears);$('viewYear').disabled=c.years<=1;
+  $('viewYearValue').textContent=atEnd?`${fmtMonth(month)} 뒤 · 투자 기간 말`:`${fmtMonth(month)} 뒤`;
+  for(const id of ['viewPercentile','pathPercentile']){$(id).value=String(Math.round(viewP*100));$(id+'Value').textContent=middle?'중앙':`${rank} 경로`}
+  return {month,atEnd,sel,low,high,rank}
+}
 function renderAll(){
-  const r=lastResult,c=lastConfig;scenarioIndexMap=sortedScenarioIndices(r);
-  const low=indexAt(.1),mid=indexAt(.5),high=indexAt(.9),E=c.etfs,tickersOf=cc=>E.filter(e=>(e.kind==='cc')===cc).map(e=>e.ticker);
+  const r=lastResult,c=lastConfig;scenarioIndexMap=orderAt(r.months);
+  const {month,atEnd,sel,low,high,rank}=renderHeadline(),E=c.etfs,tickersOf=cc=>E.filter(e=>(e.kind==='cc')===cc).map(e=>e.ticker);
   const ccNames=namesOr(tickersOf(true),'커버드콜 ETF'),coreNames=namesOr(tickersOf(false),'일반 ETF');
-  $('resultTitle').textContent=`${c.years}년 뒤 세후 자산 전망`;
+  // Figures that only exist for the whole period (TWR, MDD, tax, holdings) describe the chosen path at the end.
+  const defaultView=viewP===.5&&atEnd,pathName=atEnd?`${rank} 경로`:`${fmtMonth(month)} 시점 ${rank} 경로`;
+  $('riskBasis').textContent=defaultView?'중앙 결과를 만든 하나의 동일 경로 기준입니다.':`${pathName} 하나를 기준으로 한 투자 기간 전체 수치입니다.`;
+  $('assetSummaryTitle').textContent=defaultView?'중앙 결과의 ETF별 평가액과 취득원가':`${pathName}의 ETF별 평가액과 취득원가 · 투자 기간 말`;
+  $('centralSwitchLabel').textContent=defaultView?'최종자산 중앙 결과의 도달 시점':`${pathName}의 도달 시점`;
   const strategySummary=r.policy.mode==='none'?'비중 유지':r.policy.mode==='dividend'?`${ccNames} 월 세후 ${fmtMoney(c.dividendTarget)} 달성 후 전환`:`${fmtMonth(c.switchAfterMonths)} 후 전환`;
   const marketLabel={balanced:'균형 시장가정',conservative:'보수적 시장가정',historical:'역사 참고 시장가정',custom:'직접 입력 시장가정'}[c.marketPreset]||'직접 입력 시장가정';
   const stressLabel=c.stressDrop>0?`${fmtMonth(c.stressMonth)}에 지수 추가 −${c.stressDrop}%`:'강제 폭락 없음';
   const currentTotal=E.reduce((sum,e)=>sum+e.holding,0),weightText=E.map((e,k)=>r.W[k]>0?`${e.ticker} ${(r.W[k]*100).toFixed(0)}`:'').filter(Boolean).join(' / ');
   $('conditionSummary').textContent=`현재 보유 ${fmtMoney(currentTotal)} + 지금 추가 ${fmtMoney(c.initial)} · 월 ${fmtMoney(c.monthly)} · 신규 투자 비중 ${weightText} · ${strategySummary} · ${marketLabel} · ${stressLabel} · ${c.fxOn?'환율 반영':'환율 고정'}`;
-  $('heroLabel').textContent=viewMode==='real'?'일괄 매도 후 예상 자산 · 오늘 가치':'일괄 매도 후 예상 자산 중앙값';
-  $('mainValue').textContent=fmtMoney(displayEnd(r.finNet[mid]));
-  $('mainMultiple').textContent=`명목 원금 대비 ${(r.finNet[mid]/r.investedTotal).toFixed(1)}배`;
-  $('mainMultiple').title='명목 세후 종료자산 ÷ 현재 평가액과 신규 투자금의 합계';
-  $('mainSub').textContent=`세전 ${fmtMoney(displayEnd(r.finGross[mid]))} · 예상 누적 세금 ${fmtMoney(displayEnd(r.taxTotal[mid]))}`;
-  $('rangeValue').textContent=`${fmtMoney(displayEnd(r.finNet[low]))} – ${fmtMoney(displayEnd(r.finNet[high]))}`;
-  $('investedValue').textContent=fmtMoney(r.investedTotal);
-  const loss=Array.from(r.finNet).filter(x=>x<r.investedTotal).length/r.N,beat=Array.from(r.finNet).filter((x,i)=>x>r.benchFinNet[i]).length/r.N;
-  $('lossValue').textContent=fmtPct(loss);$('lossValue').className=loss>.2?'negative':'';
-  $('beatValue').textContent=fmtPct(beat);$('beatValue').className=beat>.5?'positive':'';
-  if(viewMode==='nominal'){$('altValueLabel').textContent='오늘 가치 중앙값';$('altValue').textContent=fmtMoney(r.finNet[mid]/deflatorAt(r.months));$('altValueNote').textContent=`물가 ${c.inflation.toFixed(1)}% 반영`}
-  else{$('altValueLabel').textContent='명목 자산 중앙값';$('altValue').textContent=fmtMoney(r.finNet[mid]);$('altValueNote').textContent='미래 시점의 원화 금액'}
-  const diff=r.finNet[mid]-r.benchFinNet[mid];
-  $('twrValue').textContent=fmtPct(r.twr[mid]);$('mddValue').textContent=fmtPct(r.mdd[mid]);$('taxValue').textContent=fmtMoney(displayEnd(r.taxTotal[mid]));$('diffValue').textContent=fmtSignedMoney(displayEnd(diff));$('diffValue').className=diff>=0?'positive':'negative';
-  const pathP=Number($('pathPercentile').value),pathIndex=indexAt(pathP);
-  renderStrategyResult(mid);renderComparison(mid);renderScenarioTable();renderAssetTable(mid);renderDividendTable();renderPathChart(low,pathIndex,high,pathP);renderCashChart();
+  const diff=r.finNet[sel]-r.benchFinNet[sel];
+  $('twrValue').textContent=fmtPct(r.twr[sel]);$('mddValue').textContent=fmtPct(r.mdd[sel]);$('taxValue').textContent=fmtMoney(displayEnd(r.taxTotal[sel]));$('diffValue').textContent=fmtSignedMoney(displayEnd(diff));$('diffValue').className=diff>=0?'positive':'negative';
+  renderStrategyResult(sel,defaultView);renderComparison(sel);renderScenarioTable();renderAssetTable(sel);renderDividendTable();renderPathChart(low,sel,high,month,rank);renderCashChart();
   $('dividendModeChip').textContent=`원천징수 ${c.whTax.toFixed(1)}% 반영`;
   $('pathBasisChip').textContent=viewMode==='real'?'각 시점 전량 매도 후 · 오늘 가치':'각 시점 전량 매도 후 · 명목 원화';
   const destinationLabel=(value,weights)=>{
@@ -1418,7 +1518,7 @@ function renderAll(){
   const ccNote=tickersOf(true).length?` ${ccNames} 세후배당은 ${r.policy.mode!=='none'?`전환 전 ${destinationLabel(c.ccDividend,r.W)}, 전환 후 ${destinationLabel(r.policy.dividend,r.policy.weights)}`:destinationLabel(c.ccDividend,r.W)}합니다.`:'';
   $('cashNote').textContent=`모든 배당 표시는 ${c.whTax.toFixed(1)}% 원천징수 후 금액입니다.${coreNote}${ccNote}`
 }
-function renderStrategyResult(i){
+function renderStrategyResult(i,defaultView=true){
   const r=lastResult,c=lastConfig,policy=r.policy,enabled=policy.mode!=='none';
   $('strategyResult').hidden=!enabled;if(!enabled)return;
   const E=c.etfs,cc=E.filter(e=>e.kind==='cc').map(e=>e.ticker),ccNames=namesOr(cc,'커버드콜 ETF');
@@ -1434,7 +1534,8 @@ function renderStrategyResult(i){
   $('switchMedian').textContent=hits.length?fmtMonth(hits[Math.round((hits.length-1)*.5)]):'기간 내 미도달';
   $('centralSwitch').textContent=fmtMonth(month);
   $('centralSwitchNote').textContent=month>0?(cc.length?`전환 월 ${ccNames} 세후배당 ${fmtWon(r.switchDividends[i])} · 명목`:'지정한 시점에 전환했습니다.'):'이 경로는 시작 비중을 끝까지 유지했습니다.';
-  $('strategyOutcomeNote').textContent=month>0?(month===r.months?'중앙 결과는 마지막 달에 전환되어 이후 신규 납입금은 없습니다.':`중앙 결과는 ${month+1}개월차 신규 납입부터 전환 비중을 적용합니다.`):'중앙 결과는 조건을 충족하지 못해 전환되지 않았습니다.';
+  const who=defaultView?'중앙 결과는':'고른 경로는';
+  $('strategyOutcomeNote').textContent=month>0?(month===r.months?`${who} 마지막 달에 전환되어 이후 신규 납입금은 없습니다.`:`${who} ${month+1}개월차 신규 납입부터 전환 비중을 적용합니다.`):`${who} 조건을 충족하지 못해 전환되지 않았습니다.`;
   if(!cc.length)return;
   const receivers=E.filter((e,k)=>policy.weights[k]>0).map(e=>e.ticker);
   const postDividendLabel=policy.dividend==='cash'?'현금으로 보관':policy.dividend!=='split'?`${E[policy.dividend].ticker}에 투자`:receivers.length===1?`${receivers[0]}에 투자`:`${namesOr(receivers,'일반 ETF')}에 전환 비중대로 배분`;
@@ -1523,26 +1624,33 @@ function renderDividendTable(){
 }
 function columnQuantiles(arr,cols,col,ps){const values=new Float64Array(lastResult.N);for(let s=0;s<lastResult.N;s++)values[s]=arr[s*cols+col];values.sort();return ps.map(p=>values[Math.round((values.length-1)*p)])}
 function chartOptions(yFormatter){return {responsive:true,maintainAspectRatio:false,animation:reducedMotion?false:{duration:250},interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',align:'end',labels:{color:css('--sub'),usePointStyle:true,boxWidth:8,boxHeight:8,padding:14}},tooltip:{backgroundColor:css('--ink'),titleColor:css('--bg'),bodyColor:css('--bg'),padding:11,callbacks:{label:ctx=>ctx.dataset.label+': '+yFormatter(ctx.parsed.y)}}},scales:{x:{ticks:{color:css('--muted'),maxTicksLimit:10},grid:{display:false}},y:{ticks:{color:css('--muted'),callback:yFormatter},grid:{color:css('--line')}}}}}
-function renderPathChart(low,selected,high,percentile){
-  const r=lastResult,cols=r.months+1,step=Math.max(1,Math.ceil(r.months/120)),p10=[],p50=[],p90=[],bench=[],paid=[];let cum=r.startValue;
+function renderPathChart(low,selected,high,month,rank){
+  const r=lastResult,years=lastConfig.years,atEnd=month===r.months,cols=r.months+1,step=Math.max(1,Math.ceil(r.months/120)),p10=[],p50=[],p90=[],bench=[],paid=[];let cum=r.startValue;
   for(let m=0;m<=r.months;m++){if(m>0)cum+=r.contrib[m-1];if(m%step&&m!==r.months)continue;const x=m/12,qs=columnQuantiles(r.paths,cols,m,[.1,.9]);p10.push({x,y:displayAt(qs[0],m)});p50.push({x,y:displayAt(r.paths[selected*cols+m],m)});p90.push({x,y:displayAt(qs[1],m)});bench.push({x,y:displayAt(r.benchPaths[selected*cols+m],m)});paid.push({x,y:displayAt(cum,m)})}
-  if(typeof Chart==='undefined'){$('pathChart').style.display='none';$('pathFallback').style.display='grid';return}
-  $('pathFallback').style.display='none';$('pathChart').style.display='block';if(pathChart)pathChart.destroy();
-  const base=chartOptions(fmtMoney),tickStep=r.years<=10?1:r.years<=20?2:r.years<=30?3:5,rank=pathRankLabel(percentile);
-  pathChart=new Chart($('pathChart'),{type:'line',data:{datasets:[
-    {label:'현재 전략 예상 범위 (10~90%)',data:p90,borderColor:'transparent',backgroundColor:'rgba(33,85,217,.13)',pointRadius:0,fill:false},
-    {label:'하단 경계',data:p10,borderColor:'transparent',backgroundColor:'rgba(33,85,217,.13)',pointRadius:0,fill:'-1'},
-    {label:`현재 전략 · ${rank} 종료경로`,data:p50,borderColor:css('--primary'),borderWidth:3.2,pointRadius:ctx=>ctx.dataIndex===ctx.dataset.data.length-1?4:0,pointHoverRadius:5,tension:.08,order:1},
-    {label:'같은 경로의 VOO 100%',data:bench,borderColor:css('--voo'),borderWidth:1.8,borderDash:[7,4],pointRadius:0,tension:.08},
-    {label:'누적 투자원금',data:paid,borderColor:css('--principal'),backgroundColor:css('--principal'),borderWidth:2.5,borderDash:[3,3],pointRadius:ctx=>ctx.dataIndex===ctx.dataset.data.length-1?4:0,pointHoverRadius:5,order:2}
-  ]},options:{...base,plugins:{...base.plugins,legend:{...base.plugins.legend,labels:{...base.plugins.legend.labels,filter:item=>item.text!=='하단 경계'}},tooltip:{...base.plugins.tooltip,callbacks:{...base.plugins.tooltip.callbacks,title:items=>`${Number(items[0].parsed.x.toFixed(1))}년차`}}},scales:{x:{type:'linear',min:0,max:r.years,title:{display:true,text:'투자 경과 (년)',color:css('--muted')},ticks:{color:css('--muted'),stepSize:tickStep,callback:value=>`${value}년`},grid:{display:false}},y:{...base.scales.y,title:{display:true,text:viewMode==='real'?'세후 자산 · 오늘 가치':'세후 자산 · 명목 원화',color:css('--muted')}}}}});
-  const principal=displayEnd(r.investedTotal),outcome=displayEnd(r.finNet[selected]),delta=outcome-principal,multiple=principal>0?outcome/principal:0;
-  $('pathDescription').textContent=`파란 영역은 각 시점 결과의 가운데 80%(10~90백분위)입니다. 실선은 최종 세후자산 ${rank} 실제 경로이며, 점선은 같은 시장·환율 경로의 VOO 100%입니다.`;
-  $('pathPrincipalValue').textContent=fmtMoney(principal);$('pathOutcomeLabel').textContent=`${rank} 경로 종료자산`;$('pathOutcomeValue').textContent=fmtMoney(outcome);
+  const principal=displayAt(investedAt(month),month),outcome=displayAt(valueAt(selected,month),month),delta=outcome-principal,multiple=principal>0?outcome/principal:0;
+  $('pathDescription').textContent=`파란 영역은 각 시점 결과의 가운데 80%(10~90백분위)입니다. 실선은 ${atEnd?'최종':`${fmtMonth(month)} 시점`} 세후자산 ${rank} 실제 경로이며, 점선은 같은 시장·환율 경로의 VOO 100%입니다.${atEnd?'':' 세로 점선은 고른 결과 시점입니다.'}`;
+  $('pathPrincipalValue').textContent=fmtMoney(principal);$('pathOutcomeLabel').textContent=atEnd?`${rank} 경로 종료자산`:`${rank} 경로 · ${fmtMonth(month)} 시점 자산`;$('pathOutcomeValue').textContent=fmtMoney(outcome);
   $('pathOutcomeDelta').textContent=`투자원금 대비 ${multiple.toFixed(2)}배 · ${fmtSignedMoney(delta)}`;$('pathOutcomeDelta').className=delta>=0?'positive':'negative';
   const shock=lastConfig.stressDrop>0?` ${fmtMonth(lastConfig.stressMonth)}에 지수 추가 −${lastConfig.stressDrop}% 폭락을 반영했습니다.`:' 강제 폭락은 적용하지 않았습니다.';
   const actualMddMonth=Math.max(1,Math.ceil(r.mddAt[selected]/21));
-  $('pathSummary').textContent=`${rank} 실제 경로의 ${lastConfig.years}년 후 세후자산은 ${fmtMoney(outcome)}, 투자 중 MDD는 ${fmtMonth(actualMddMonth)}에 기록한 ${fmtPct(r.mdd[selected])}입니다.${shock} 참고 범위: 10백분위 ${fmtMoney(displayEnd(r.finNet[low]))} · 90백분위 ${fmtMoney(displayEnd(r.finNet[high]))}.`
+  $('pathSummary').textContent=`${rank} 실제 경로의 ${fmtMonth(month)} 후 세후자산은 ${fmtMoney(outcome)}, 투자 중 MDD는 ${fmtMonth(actualMddMonth)}에 기록한 ${fmtPct(r.mdd[selected])}입니다.${shock} 참고 범위: 10백분위 ${fmtMoney(displayAt(valueAt(low,month),month))} · 90백분위 ${fmtMoney(displayAt(valueAt(high,month),month))}.`;
+  if(typeof Chart==='undefined'){$('pathChart').style.display='none';$('pathFallback').style.display='grid';return}
+  $('pathFallback').style.display='none';$('pathChart').style.display='block';if(pathChart)pathChart.destroy();
+  const base=chartOptions(fmtMoney),tickStep=years<=10?1:years<=20?2:years<=30?3:5,markAt=month/12;
+  const endOrChosen=ctx=>{const point=ctx.dataset.data[ctx.dataIndex];return ctx.dataIndex===ctx.dataset.data.length-1||(point&&point.x===markAt)?4:0};
+  // A dashed vertical rule at the chosen result time.
+  const viewMarker={id:'viewMarker',afterDatasetsDraw(chart){
+    if(atEnd)return;
+    const {ctx,chartArea,scales}=chart,x=scales.x.getPixelForValue(markAt);
+    ctx.save();ctx.strokeStyle=css('--muted');ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,chartArea.top);ctx.lineTo(x,chartArea.bottom);ctx.stroke();ctx.restore()
+  }};
+  pathChart=new Chart($('pathChart'),{type:'line',data:{datasets:[
+    {label:'현재 전략 예상 범위 (10~90%)',data:p90,borderColor:'transparent',backgroundColor:'rgba(33,85,217,.13)',pointRadius:0,fill:false},
+    {label:'하단 경계',data:p10,borderColor:'transparent',backgroundColor:'rgba(33,85,217,.13)',pointRadius:0,fill:'-1'},
+    {label:`현재 전략 · ${rank} 경로`,data:p50,borderColor:css('--primary'),borderWidth:3.2,pointRadius:endOrChosen,pointHoverRadius:5,tension:.08,order:1},
+    {label:'같은 경로의 VOO 100%',data:bench,borderColor:css('--voo'),borderWidth:1.8,borderDash:[7,4],pointRadius:0,tension:.08},
+    {label:'누적 투자원금',data:paid,borderColor:css('--principal'),backgroundColor:css('--principal'),borderWidth:2.5,borderDash:[3,3],pointRadius:endOrChosen,pointHoverRadius:5,order:2}
+  ]},plugins:[viewMarker],options:{...base,plugins:{...base.plugins,legend:{...base.plugins.legend,labels:{...base.plugins.legend.labels,filter:item=>item.text!=='하단 경계'}},tooltip:{...base.plugins.tooltip,callbacks:{...base.plugins.tooltip.callbacks,title:items=>`${Number(items[0].parsed.x.toFixed(1))}년차`}}},scales:{x:{type:'linear',min:0,max:years,title:{display:true,text:'투자 경과 (년)',color:css('--muted')},ticks:{color:css('--muted'),stepSize:tickStep,callback:value=>`${value}년`},grid:{display:false}},y:{...base.scales.y,title:{display:true,text:viewMode==='real'?'세후 자산 · 오늘 가치':'세후 자산 · 명목 원화',color:css('--muted')}}}}})
 }
 function annualDividendQuantiles(year){const r=lastResult,values=new Float64Array(r.N);for(let s=0;s<r.N;s++){const off=(s*r.yearsCount+year)*r.n;let total=0;for(let k=0;k<r.n;k++)total+=r.annualDivs[off+k];values[s]=total/12}values.sort();return [.1,.5,.9].map(p=>values[Math.round((values.length-1)*p)])}
 function renderCashChart(){
@@ -1562,10 +1670,13 @@ form.addEventListener('change',e=>{if(isTickerBox(e.target))return;if(e.target.i
 form.addEventListener('click',e=>{const button=e.target.closest('[data-remove]');if(button)removeRow(button.dataset.remove,button.dataset.row)});
 for(const [buttonId,name] of [['addPlan','plan'],['addHolding','holdings']])$(buttonId).addEventListener('click',()=>{const row=addRow(name),input=row&&document.getElementById(`${name==='plan'?'p':'h'}t-${row.id}`);if(input)input.focus()});
 $('marketPreset').addEventListener('change',e=>applyMarketPreset(e.target.value));
-$('pathPercentile').addEventListener('change',()=>{if(lastResult)renderAll()});
+// Sliders update the headline while dragging; the chart and tables follow on release.
+$('viewYear').addEventListener('input',e=>{const years=Number(e.target.value);viewYears=lastConfig&&years>=lastConfig.years?null:years;if(lastResult)renderHeadline()});
+$('viewYear').addEventListener('change',()=>{if(lastResult)renderAll()});
+for(const id of ['viewPercentile','pathPercentile']){$(id).addEventListener('input',e=>{viewP=Number(e.target.value)/100;if(lastResult)renderHeadline()});$(id).addEventListener('change',()=>{if(lastResult)renderAll()})}
 for(const id of ['stressMonth','stressDrop']){$(id).addEventListener('input',updateStressControls);$(id).addEventListener('change',()=>{setDirty();runSimulation({scroll:false})})}
 $('allocationCompareRun').addEventListener('click',runAllocationComparison);
-$('customAllocation').addEventListener('input',e=>{syncDynamicField(e.target);if($('allocationCompareTable').innerHTML){$('allocationCompareStatus').className='compare-status';$('allocationCompareStatus').textContent='사용자안 비중이 바뀌었습니다. 비교를 다시 실행해 주세요.'}});
+$('customAllocation').addEventListener('input',e=>{syncDynamicField(e.target);saveSettings();if($('allocationCompareTable').innerHTML){$('allocationCompareStatus').className='compare-status';$('allocationCompareStatus').textContent='사용자안 비중이 바뀌었습니다. 비교를 다시 실행해 주세요.'}});
 const mobileQuery=matchMedia('(max-width:900px)');
 function setMobileTab(tab,toTop=true){
   document.body.classList.toggle('m-inputs',tab==='inputs');document.body.classList.toggle('m-results',tab==='results');
@@ -1578,10 +1689,13 @@ setMobileTab('inputs',false);
 if(typeof navigator!=='undefined'&&'serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 $('cancel').addEventListener('click',()=>cancelRun());$('mobileRun').addEventListener('click',()=>runSimulation());
 $('newSeed').addEventListener('click',()=>{$('seed').value=String(crypto.getRandomValues(new Uint32Array(1))[0]);setDirty()});
-$('resetDefaults').addEventListener('click',()=>{form.reset();resetEtfState();$('pathPercentile').value='0.5';$('stressMonth').value='90';$('stressDrop').value='0';renderEtfLists();$('ccDividend').value='split';$('postCcDividend').value='split';updateStressControls();setDirty()});
+$('resetDefaults').addEventListener('click',()=>{form.reset();resetEtfState();viewYears=null;viewP=.5;$('stressMonth').value='90';$('stressDrop').value='0';renderEtfLists();$('ccDividend').value='split';$('postCcDividend').value='split';updateStressControls();setDirty()});
 $('divScenario').addEventListener('change',renderDividendTable);
 document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{viewMode=button.dataset.view;document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b===button));if(lastResult)renderAll()}));
-renderEtfLists();updateStressControls();runSimulation({initial:true});
+const restored=loadSettings();
+renderEtfLists();
+if(restored){for(const [id,value] of Object.entries(restored))restoreValue(id,value);refreshEtfUi()}
+updateStressControls();runSimulation({initial:true});
 </script>
 </body>
 </html>
