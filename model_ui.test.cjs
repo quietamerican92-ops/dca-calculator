@@ -42,7 +42,7 @@ for (const match of html.matchAll(/<select\b[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/
   elements.get(match[1]).value = selected[1].match(/value="([^"]*)"/)[1];
 }
 // The rows for each ETF are rendered at runtime, so their elements exist only once the page asks for them.
-const runtimeId = /^(pt|pl|ps|pi|w|pwf|pwl|pw|cmpl|cmp|ht|hl|hs|hi|hv|hb)-r\d+$|^p-[A-Z0-9.-]+-(kind|under|beta|lev|alpha|fee|div|freq)$/;
+const runtimeId = /^(pt|pl|ps|pi|w|cmpl|cmp|ht|hl|hs|hi|hv|hb)-r\d+$|^p-[A-Z0-9.-]+-(kind|under|beta|lev|alpha|fee|div|freq)$|^pw-[A-Z0-9.-]+$/;
 const element = id => {
   if (!elements.has(id) && runtimeId.test(id)) elements.set(id, stub('input'));
   assert.ok(elements.has(id), `Missing element: ${id}`);
@@ -63,12 +63,13 @@ const tickers = cfg => Array.from(cfg.etfs, e => e.ticker);
 const column = (cfg, key) => Array.from(cfg.etfs, e => e[key]);
 const messages = () => Array.from(ui.validate(ui.getConfig()));
 
-// Default scenario: VOO/QLD/JEPQ, a 100만원 net-dividend trigger, then 70/30.
+// Default scenario: VOO/QLD/JEPQ and a 100만원 net-dividend trigger; after it, new money keeps the VOO:QLD ratio.
 const defaults = ui.getConfig();
 assert.deepEqual(tickers(defaults), ['VOO', 'QLD', 'JEPQ']);
 assert.deepEqual(column(defaults, 'kind'), ['core', 'core', 'cc']);
 assert.deepEqual(column(defaults, 'weight'), [50, 20, 30]);
-assert.deepEqual(column(defaults, 'postWeight'), [70, 30, 0]);
+assert.deepEqual(column(defaults, 'postWeight'), [50, 20, 0]);
+assert.equal(element('postWeights').hidden, true);
 assert.deepEqual(column(defaults, 'holding'), [0, 0, 0]);
 assert.deepEqual(column(defaults, 'lev'), [1, 2, 1]);
 assert.equal(defaults.strategyMode, 'dividend');
@@ -99,7 +100,7 @@ ui.applyMarketPreset('balanced');
 assert.equal((element('planList').innerHTML.match(/data-remove="plan"/g) ?? []).length, 3);
 assert.equal(element('holdingList').innerHTML, '');
 assert.equal(element('ccDividendLabel').textContent, 'JEPQ 세후배당 사용처');
-assert.match(element('ccDividend').innerHTML, /VOO·QLD에 신규 비중대로/);
+assert.match(element('ccDividend').innerHTML, /VOO·QLD에 투자 비중대로/);
 assert.equal(element('ccDividendField').hidden, false);
 // What the form produces is what the engine accepts.
 worker.simulate({ ...defaults, sims: 2, years: 1 });
@@ -129,6 +130,15 @@ worker.simulate({ ...holdingConfig, sims: 2, years: 1 });
 assert.equal(result.n, 4);
 assert.equal(result.startValue, 1000);
 assert.equal(result.startBasis, 900);
+// Everything below the lists follows them: an ETF that is only held can still receive covered-call payouts.
+assert.equal(element('reinvestLabel').textContent, 'VOO·QLD·SCHD 배당금');
+assert.match(element('ccDividend').innerHTML, /value="etf:SCHD"/);
+assert.match(element('postCcDividend').innerHTML, /value="etf:SCHD"/);
+set('ccDividend', 'etf:SCHD');
+assert.equal(ui.getConfig().ccDividend, 3);
+worker.simulate({ ...ui.getConfig(), sims: 2, years: 1 });
+assert.ok(result.dividendReinvested[3] > 0);
+set('ccDividend', 'split');
 // Dropping the planned weight does not touch what is held.
 state("plan[2].weight='0'");
 assert.deepEqual(column(ui.getConfig(), 'holding'), [200, 0, 500, 300]);
@@ -156,10 +166,10 @@ assert.equal(ui.setRowTicker('plan', rows[1].id, ' tqqq '), true);
 assert.equal(ui.getConfig().etfs[1].ticker, 'TQQQ');
 assert.equal(ui.getConfig().etfs[1].lev, 3);
 assert.equal(ui.getConfig().etfs[1].weight, 20);
-assert.equal(ui.getConfig().etfs[1].postWeight, 30);
+assert.equal(ui.getConfig().etfs[1].postWeight, 20);
 assert.match(element('qldGrowthHint').textContent, /TQQQ 연/);
 assert.match(element(`pi-${rows[1].id}`).innerHTML, /나스닥100 일간 3배/);
-assert.match(element('ccDividend').innerHTML, /VOO·TQQQ에 신규 비중대로/);
+assert.match(element('ccDividend').innerHTML, /VOO·TQQQ에 투자 비중대로/);
 assert.equal(ui.setRowTicker('plan', rows[1].id, 'VOO'), false);
 assert.match(element('planNote').textContent, /이미 목록에 있는 ETF/);
 assert.equal(ui.getConfig().etfs[1].ticker, 'TQQQ');
@@ -210,15 +220,28 @@ assert.equal(element('addPlan').disabled, false);
 for (const row of Array.from(state('plan'))) ui.removeRow('plan', row.id);
 assert.equal(state('plan.length'), 1);
 assert.deepEqual(tickers(ui.getConfig()), ['JEPQ']);
-// Only a covered-call ETF is left, so its payout cannot be split across ordinary ETFs.
-assert.match(messages().join('\n'), /일반 ETF/);
+// Only a covered-call ETF is left: payouts fall back to reinvesting, and a switch has nowhere to send new money.
+assert.equal(element('ccDividend').value, 'self');
+assert.doesNotMatch(element('ccDividend').innerHTML, /value="split"/);
+assert.match(messages().join('\n'), /일반 ETF가 없어/);
 ui.resetEtfState();
 ui.renderEtfLists();
+set('ccDividend', 'split');
 
-// Without a covered-call ETF the dividend trigger is unavailable, but a timed switch still works.
+// Without a covered-call ETF the dividend trigger switches itself off, and returns with the next covered-call ETF.
 ui.removeRow('plan', state('plan[2].id'));
 assert.equal(element('ccDividendField').hidden, true);
-assert.match(messages().join('\n'), /커버드콜 ETF가 없어/);
+assert.equal(element('strategyMode').value, 'none');
+assert.equal(element('strategyNote').hidden, false);
+assert.equal(element('strategyDividendOption').disabled, true);
+assert.equal(messages().length, 0);
+const returned = ui.addRow('plan', 'QQQI');
+assert.equal(element('strategyMode').value, 'dividend');
+assert.equal(element('strategyNote').hidden, true);
+assert.equal(element('dividendTargetLabel').textContent, 'QQQI 월 세후배당 목표');
+ui.removeRow('plan', returned.id);
+assert.equal(element('strategyMode').value, 'none');
+// A timed switch still works without one.
 set('strategyMode', 'month');
 ui.updateStrategyControls();
 assert.equal(messages().length, 0);
@@ -237,18 +260,52 @@ set('switchAfterMonths', 480);
 ui.updateStrategyControls();
 assert.match(element('triggerHelp').textContent, /전환되지 않습니다/);
 
+// Post-switch weights follow the planned weights until the user chooses to type their own.
+set('strategyMode', 'dividend');
+set('dividendTarget', 100);
+ui.updateStrategyControls();
+assert.match(element('postAllocation').textContent, /VOO 71\.4% · QLD 28\.6% · JEPQ 0%/);
+state("plan[0].weight='10'");
+ui.updateAllocation();
+assert.match(element('postAllocation').textContent, /VOO 33\.3% · QLD 66\.7% · JEPQ 0%/);
+state("plan[0].weight='50'");
+set('postMode', 'manual');
+ui.refreshEtfUi();
+assert.equal(element('postWeights').hidden, false);
+assert.match(element('postWeights').innerHTML, /id="pw-VOO"[^>]*value="71.4"/);
+assert.match(element('postWeights').innerHTML, /id="pw-QLD"[^>]*value="28.6"/);
+assert.doesNotMatch(element('postWeights').innerHTML, /pw-JEPQ/);
+const typePost = (ticker, value) => ui.syncDynamicField({ value, dataset: { post: ticker } });
+typePost('VOO', '');
+typePost('QLD', '');
 set('strategyMode', 'none');
-state("plan[0].post='';plan[1].post=''");
 ui.updateStrategyControls();
 assert.equal(element('strategyControls').hidden, true);
 assert.equal(messages().length, 0);
 set('strategyMode', 'dividend');
-set('dividendTarget', 100);
-state("plan[0].post='0';plan[1].post='0'");
 assert.ok(messages().length > 0);
-state("plan[0].post='70';plan[1].post='30'");
+typePost('VOO', '70');
+typePost('QLD', '30');
 ui.updateStrategyControls();
 assert.match(element('postAllocation').textContent, /VOO 70\.0% · QLD 30\.0% · JEPQ 0%/);
+assert.equal(messages().length, 0);
+assert.deepEqual(column(ui.getConfig(), 'postWeight'), [70, 30, 0]);
+// An ETF that is only held can be a post-switch target and a payout destination.
+const heldQqq = ui.addRow('holdings', 'QQQ');
+assert.match(element('postWeights').innerHTML, /id="pw-QQQ"[^>]*value="0"/);
+typePost('QQQ', '50');
+assert.deepEqual(column(ui.getConfig(), 'postWeight'), [70, 30, 0, 50]);
+set('postCcDividend', 'etf:QQQ');
+assert.equal(ui.getConfig().postCcDividend, 3);
+worker.simulate({ ...ui.getConfig(), sims: 2, years: 1, dividendTarget: 0.001 });
+assert.equal(result.switchMonths[0], 1);
+assert.ok(result.annualInvestments[3] > 0 && result.dividendReinvested[3] > 0);
+ui.removeRow('holdings', heldQqq.id);
+assert.equal(element('postCcDividend').value, 'split');
+set('postMode', 'auto');
+ui.refreshEtfUi();
+assert.equal(element('postWeights').hidden, true);
+assert.deepEqual(column(ui.getConfig(), 'postWeight'), [50, 20, 0]);
 assert.equal(messages().length, 0);
 
 function render(config) {
@@ -269,7 +326,7 @@ assert.match(element('strategyOutcomeNote').textContent, /3개월차/);
 assert.match(element('strategyOutcomeNote').textContent, /기존 JEPQ는 매도하지 않고/);
 assert.equal(element('strategyResultTitle').textContent, 'JEPQ 배당 목표 후 투자 전환');
 assert.equal(element('strategyBefore').textContent, 'JEPQ 100.0%');
-assert.equal(element('strategyAfter').textContent, 'VOO 70.0% · QLD 30.0%');
+assert.equal(element('strategyAfter').textContent, 'VOO 71.4% · QLD 28.6%');
 assert.match(element('conditionSummary').textContent, /신규 투자 비중 JEPQ 100 ·/);
 assert.match(element('cashNote').textContent, /JEPQ 세후배당은 전환 전 같은 ETF에 재투자, 전환 후 VOO·QLD에 분할 투자합니다/);
 assert.match(element('divTable').innerHTML, /2개월차 말 전환/);
