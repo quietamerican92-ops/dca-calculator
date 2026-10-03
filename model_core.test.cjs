@@ -144,6 +144,12 @@ const qldTwoDay = (1 + sandbox.qldDailyReturn(0.10, 0, 0))
   * (1 + sandbox.qldDailyReturn(-0.090909090909, 0, 0)) - 1;
 close(qldTwoDay, -0.0181818181816, 1e-10);
 
+// The generic ETF slot reproduces both the plain index fund and the 2x daily-reset fund.
+close(sandbox.etfDailyReturn(0.01, 1, 2, 0.0001, 0.0002), sandbox.qldDailyReturn(0.01, 0.0001, 0.0002), 1e-15);
+close(sandbox.etfDailyReturn(0.01, 1, 1, 0.0001, 0.0002), 0.0099, 1e-15);
+close(sandbox.etfDailyReturn(0.01, 0.8, 3, 0, 0.001), 0.024 - 0.002, 1e-15);
+assert.throws(() => sandbox.assetModels({ assets: [{ under: 'dow', beta: 1, lev: 1, freq: 4 }, {}, {}] }));
+
 // A chosen broad-market crash is injected in the requested month on every path.
 const stressedVOO = run({ monthly: 0, initial: 1000, stressMonth: 6, stressDrop: 50 });
 close(stressedVOO.finGross[0], 500, 1e-6);

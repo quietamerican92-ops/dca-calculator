@@ -243,6 +243,28 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
 .strategy-metrics small{display:block;color:var(--sub);font-size:.75rem;margin-top:4px}
 .mobile-run{display:none}
 .mobile-tabs{display:none}
+.etf-pickers{display:grid;gap:10px}
+.etf-picker{border:1px solid var(--line);border-radius:12px;padding:11px;background:var(--panel-2)}
+.etf-picker>label{display:flex;align-items:center;gap:7px;font-size:.8rem;font-weight:700;color:var(--sub);margin-bottom:7px}
+.slot-hint{font-weight:500;color:var(--muted);font-size:.72rem}
+.combo{position:relative}
+.combo input[type=text]{text-transform:uppercase;font-weight:700;letter-spacing:.02em;background:var(--panel)}
+.combo-list{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);margin:0;padding:4px;list-style:none;background:var(--panel);border:1px solid var(--line-strong);border-radius:11px;box-shadow:var(--shadow);max-height:min(320px,55vh);overflow:auto}
+.combo-list li{display:grid;grid-template-columns:58px minmax(0,1fr);gap:1px 9px;padding:8px 9px;border-radius:8px;cursor:pointer}
+.combo-list li[aria-selected=true],.combo-list li:hover{background:var(--primary-soft)}
+.combo-list .t{font-weight:700;grid-row:span 2;align-self:center}
+.combo-list .n{font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.combo-list .m{font-size:.72rem;color:var(--muted)}
+.combo-list li.empty{display:block;color:var(--muted);font-size:.78rem;cursor:default;background:none}
+.etf-info{margin-top:8px;font-size:.78rem;color:var(--sub);line-height:1.45}
+.etf-info-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.etf-info-head strong{color:var(--ink);font-size:.86rem}
+.etf-badge{font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--primary-soft);color:var(--primary-2)}
+.etf-badge.lev{background:var(--warn-soft);color:var(--warn)}.etf-badge.cc{background:var(--good-soft);color:var(--good)}.etf-badge.custom{background:var(--danger-soft);color:var(--danger)}
+.etf-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:7px 0 0}
+.etf-stats div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 7px;min-width:0}
+.etf-stats dt{font-size:.66rem;color:var(--muted)}.etf-stats dd{margin:0;font-weight:700;color:var(--ink);font-size:.76rem;overflow-wrap:anywhere}
+.slot-title{margin:14px 0 8px;font-size:.8rem;color:var(--sub)}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 @media(max-width:1120px){
   .workspace{grid-template-columns:340px minmax(0,1fr)}
@@ -291,7 +313,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
       </div>
     </div>
     <div class="method-tags" aria-label="계산 방식">
-      <span class="method-tag">QLD 일간 리셋</span>
+      <span class="method-tag">레버리지 일간 리셋</span>
       <span class="method-tag">취득원가 기반 세금</span>
       <span class="method-tag">공통 난수 비교</span>
     </div>
@@ -310,21 +332,43 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
       </div>
       <form id="configForm" novalidate>
         <fieldset>
+          <legend>투자할 ETF 고르기</legend>
+          <p class="details-copy">티커나 이름 일부를 입력하면 후보가 뜹니다. 목록에 없는 ETF도 직접 입력할 수 있어요.</p>
+          <div class="etf-pickers">
+            <div class="etf-picker">
+              <label for="ticker0"><span class="swatch" style="background:var(--voo)"></span>ETF ①<span class="slot-hint">지수·배당·성장형</span></label>
+              <div class="combo"><input type="text" id="ticker0" value="VOO" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="tickerList0" placeholder="티커 입력 (예: QQQ)"><ul class="combo-list" id="tickerList0" role="listbox" hidden></ul></div>
+              <div class="etf-info" id="tickerInfo0" aria-live="polite"></div>
+            </div>
+            <div class="etf-picker">
+              <label for="ticker1"><span class="swatch" style="background:var(--qld)"></span>ETF ②<span class="slot-hint">레버리지 포함</span></label>
+              <div class="combo"><input type="text" id="ticker1" value="QLD" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="tickerList1" placeholder="티커 입력 (예: QQQ)"><ul class="combo-list" id="tickerList1" role="listbox" hidden></ul></div>
+              <div class="etf-info" id="tickerInfo1" aria-live="polite"></div>
+            </div>
+            <div class="etf-picker">
+              <label for="ticker2"><span class="swatch" style="background:var(--jepq)"></span>커버드콜 ETF<span class="slot-hint">월배당·전략 전환 대상</span></label>
+              <div class="combo"><input type="text" id="ticker2" value="JEPQ" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="tickerList2" placeholder="티커 입력 (예: QQQ)"><ul class="combo-list" id="tickerList2" role="listbox" hidden></ul></div>
+              <div class="etf-info" id="tickerInfo2" aria-live="polite"></div>
+            </div>
+          </div>
+          <p class="fee-note">보수·분배율은 공개자료 기준 대략값이고, 지수 민감도·옵션 프리미엄은 모델용 추정치입니다. 상세 가정에서 직접 고칠 수 있어요.</p>
+        </fieldset>
+        <fieldset>
           <legend>현재 보유 중인 ETF</legend>
           <p class="details-copy" id="holdingsHelp">지금 보유한 ETF의 원화 평가액을 입력하세요. 앞으로 투자할 비중과 별개로 유지됩니다.</p>
           <div class="weights">
-            <div class="holding-row"><label class="asset-name" for="holdingVOO"><span class="swatch" style="background:var(--voo)"></span>VOO</label><div class="input-shell"><input type="number" id="holdingVOO" value="0" min="0" step="100" aria-describedby="holdingsHelp"><span class="unit">만원</span></div></div>
-            <div class="holding-row"><label class="asset-name" for="holdingQLD"><span class="swatch" style="background:var(--qld)"></span>QLD</label><div class="input-shell"><input type="number" id="holdingQLD" value="0" min="0" step="100" aria-describedby="holdingsHelp"><span class="unit">만원</span></div></div>
-            <div class="holding-row"><label class="asset-name" for="holdingJEPQ"><span class="swatch" style="background:var(--jepq)"></span>JEPQ</label><div class="input-shell"><input type="number" id="holdingJEPQ" value="0" min="0" step="100" aria-describedby="holdingsHelp"><span class="unit">만원</span></div></div>
+            <div class="holding-row"><label class="asset-name" for="holdingVOO"><span class="swatch" style="background:var(--voo)"></span><span data-tpl="{0}">VOO</span></label><div class="input-shell"><input type="number" id="holdingVOO" value="0" min="0" step="100" aria-describedby="holdingsHelp"><span class="unit">만원</span></div></div>
+            <div class="holding-row"><label class="asset-name" for="holdingQLD"><span class="swatch" style="background:var(--qld)"></span><span data-tpl="{1}">QLD</span></label><div class="input-shell"><input type="number" id="holdingQLD" value="0" min="0" step="100" aria-describedby="holdingsHelp"><span class="unit">만원</span></div></div>
+            <div class="holding-row"><label class="asset-name" for="holdingJEPQ"><span class="swatch" style="background:var(--jepq)"></span><span data-tpl="{2}">JEPQ</span></label><div class="input-shell"><input type="number" id="holdingJEPQ" value="0" min="0" step="100" aria-describedby="holdingsHelp"><span class="unit">만원</span></div></div>
           </div>
           <p class="holdings-summary" id="holdingsSummary" aria-live="polite"></p>
           <details class="initial-basis">
             <summary>현재 보유분의 취득원가 입력 · 선택</summary>
             <p class="strategy-help" id="basisHelp">주당 가격이 아닌 ETF별 원화 총 취득원가입니다. 비워 두면 현재 평가액과 같다고 가정하므로, 과거 평가손익은 세금에 반영되지 않습니다.</p>
             <div class="weights">
-              <div class="holding-row"><label class="asset-name" for="basisVOO">VOO</label><div class="input-shell"><input type="number" id="basisVOO" min="0" step="100" placeholder="평가액과 동일" aria-describedby="basisHelp"><span class="unit">만원</span></div></div>
-              <div class="holding-row"><label class="asset-name" for="basisQLD">QLD</label><div class="input-shell"><input type="number" id="basisQLD" min="0" step="100" placeholder="평가액과 동일" aria-describedby="basisHelp"><span class="unit">만원</span></div></div>
-              <div class="holding-row"><label class="asset-name" for="basisJEPQ">JEPQ</label><div class="input-shell"><input type="number" id="basisJEPQ" min="0" step="100" placeholder="평가액과 동일" aria-describedby="basisHelp"><span class="unit">만원</span></div></div>
+              <div class="holding-row"><label class="asset-name" for="basisVOO" data-tpl="{0}">VOO</label><div class="input-shell"><input type="number" id="basisVOO" min="0" step="100" placeholder="평가액과 동일" aria-describedby="basisHelp"><span class="unit">만원</span></div></div>
+              <div class="holding-row"><label class="asset-name" for="basisQLD" data-tpl="{1}">QLD</label><div class="input-shell"><input type="number" id="basisQLD" min="0" step="100" placeholder="평가액과 동일" aria-describedby="basisHelp"><span class="unit">만원</span></div></div>
+              <div class="holding-row"><label class="asset-name" for="basisJEPQ" data-tpl="{2}">JEPQ</label><div class="input-shell"><input type="number" id="basisJEPQ" min="0" step="100" placeholder="평가액과 동일" aria-describedby="basisHelp"><span class="unit">만원</span></div></div>
             </div>
           </details>
         </fieldset>
@@ -360,9 +404,9 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
           <legend>앞으로 투자할 비중</legend>
           <p class="details-copy">매달 투자금과 지금 추가 투자금에만 적용합니다. 기존 보유분은 즉시 재배분하지 않습니다.</p>
           <div class="weights">
-            <div class="weight-row"><label class="asset-name" for="wVOO"><span class="swatch" style="background:var(--voo)"></span>VOO</label><div class="input-shell"><input type="number" id="wVOO" value="50" min="0" step="5"><span class="unit">%</span></div></div>
-            <div class="weight-row"><label class="asset-name" for="wQLD"><span class="swatch" style="background:var(--qld)"></span>QLD</label><div class="input-shell"><input type="number" id="wQLD" value="20" min="0" step="5"><span class="unit">%</span></div></div>
-            <div class="weight-row"><label class="asset-name" for="wJEPQ"><span class="swatch" style="background:var(--jepq)"></span>JEPQ</label><div class="input-shell"><input type="number" id="wJEPQ" value="30" min="0" step="5"><span class="unit">%</span></div></div>
+            <div class="weight-row"><label class="asset-name" for="wVOO"><span class="swatch" style="background:var(--voo)"></span><span data-tpl="{0}">VOO</span></label><div class="input-shell"><input type="number" id="wVOO" value="50" min="0" step="5"><span class="unit">%</span></div></div>
+            <div class="weight-row"><label class="asset-name" for="wQLD"><span class="swatch" style="background:var(--qld)"></span><span data-tpl="{1}">QLD</span></label><div class="input-shell"><input type="number" id="wQLD" value="20" min="0" step="5"><span class="unit">%</span></div></div>
+            <div class="weight-row"><label class="asset-name" for="wJEPQ"><span class="swatch" style="background:var(--jepq)"></span><span data-tpl="{2}">JEPQ</span></label><div class="input-shell"><input type="number" id="wJEPQ" value="30" min="0" step="5"><span class="unit">%</span></div></div>
           </div>
           <div class="allocation" id="allocBar" role="img" aria-label="ETF 비중"></div>
           <div class="allocation-status" id="allocMsg" aria-live="polite"></div>
@@ -371,8 +415,8 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
         <fieldset>
           <legend>운용 방식</legend>
           <div class="select-stack">
-            <div class="select-field"><label for="reinvest">VOO·QLD 배당금</label><select id="reinvest"><option value="1">각 ETF에 다시 투자</option><option value="0">현금으로 모으기</option></select></div>
-            <div class="select-field"><label for="jepqDividendDestination">JEPQ 세후배당 사용처</label><select id="jepqDividendDestination"><option value="split" selected>VOO·QLD에 신규 비중대로</option><option value="voo">VOO에 전부 투자</option><option value="qld">QLD에 전부 투자</option><option value="self">JEPQ에 다시 투자</option><option value="cash">현금으로 모으기</option></select></div>
+            <div class="select-field"><label for="reinvest" data-tpl="{0}·{1} 배당금">VOO·QLD 배당금</label><select id="reinvest"><option value="1">각 ETF에 다시 투자</option><option value="0">현금으로 모으기</option></select></div>
+            <div class="select-field"><label for="jepqDividendDestination" data-tpl="{2} 세후배당 사용처">JEPQ 세후배당 사용처</label><select id="jepqDividendDestination"><option value="split" selected data-tpl="{0}·{1}에 신규 비중대로">VOO·QLD에 신규 비중대로</option><option value="voo" data-tpl="{0}에 전부 투자">VOO에 전부 투자</option><option value="qld" data-tpl="{1}에 전부 투자">QLD에 전부 투자</option><option value="self" data-tpl="{2}에 다시 투자">JEPQ에 다시 투자</option><option value="cash">현금으로 모으기</option></select></div>
             <div class="select-field"><label for="rebal">ETF 비중 맞추기</label><select id="rebal"><option value="0">신규 투자금만 배분</option><option value="1">매년 말 전략 비중으로</option></select></div>
             <div class="select-field"><label for="sims">계산 정밀도</label><select id="sims"><option value="1000">빠르게 · 1,000회</option><option value="3000" selected>기본 · 3,000회</option><option value="6000">정밀 · 6,000회</option></select></div>
             <div class="toggle-row">
@@ -388,13 +432,13 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
             <label for="strategyMode">전환 조건</label>
             <select id="strategyMode" aria-controls="strategyControls">
               <option value="none">전환 없이 처음 비중 유지</option>
-              <option value="dividend" selected>JEPQ 월 세후배당 목표 도달</option>
+              <option value="dividend" selected data-tpl="{2} 월 세후배당 목표 도달">JEPQ 월 세후배당 목표 도달</option>
               <option value="month">지정한 투자 기간이 지난 뒤</option>
             </select>
           </div>
           <div class="strategy-controls" id="strategyControls">
             <div class="field" id="dividendTriggerField">
-              <label for="dividendTarget">JEPQ 월 세후배당 목표</label>
+              <label for="dividendTarget" data-tpl="{2} 월 세후배당 목표">JEPQ 월 세후배당 목표</label>
               <div class="input-shell"><input type="number" id="dividendTarget" value="100" min="0" step="10" aria-describedby="triggerHelp"><span class="unit">만원</span></div>
             </div>
             <div class="field" id="monthTriggerField" hidden>
@@ -403,15 +447,15 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
             </div>
             <p class="strategy-help" id="triggerHelp">매월 말 JEPQ의 원천징수 후 실제 지급액을 확인합니다. 처음 목표에 도달한 다음 달부터 투자금 배분이 바뀝니다.</p>
             <div class="field-grid">
-              <div class="field"><label for="postVOO">전환 후 VOO</label><div class="input-shell"><input type="number" id="postVOO" value="70" min="0" step="5"><span class="unit">%</span></div></div>
-              <div class="field"><label for="postQLD">전환 후 QLD</label><div class="input-shell"><input type="number" id="postQLD" value="30" min="0" step="5"><span class="unit">%</span></div></div>
+              <div class="field"><label for="postVOO" data-tpl="전환 후 {0}">전환 후 VOO</label><div class="input-shell"><input type="number" id="postVOO" value="70" min="0" step="5"><span class="unit">%</span></div></div>
+              <div class="field"><label for="postQLD" data-tpl="전환 후 {1}">전환 후 QLD</label><div class="input-shell"><input type="number" id="postQLD" value="30" min="0" step="5"><span class="unit">%</span></div></div>
             </div>
             <p class="strategy-help" id="postAllocation" aria-live="polite"></p>
             <div class="field" style="margin-top:12px">
-              <label for="postJepqDividend">전환 시점부터 받는 JEPQ 배당</label>
-              <select id="postJepqDividend"><option value="split">VOO·QLD에 전환 후 비중대로</option><option value="voo">VOO에 전부 투자</option><option value="qld">QLD에 전부 투자</option><option value="cash">현금으로 모으기</option></select>
+              <label for="postJepqDividend" data-tpl="전환 시점부터 받는 {2} 배당">전환 시점부터 받는 JEPQ 배당</label>
+              <select id="postJepqDividend"><option value="split" data-tpl="{0}·{1}에 전환 후 비중대로">VOO·QLD에 전환 후 비중대로</option><option value="voo" data-tpl="{0}에 전부 투자">VOO에 전부 투자</option><option value="qld" data-tpl="{1}에 전부 투자">QLD에 전부 투자</option><option value="cash">현금으로 모으기</option></select>
             </div>
-            <p class="strategy-help">기존 JEPQ는 팔지 않고 추가 매수·재투자를 중단합니다. 연간 비중 조정도 VOO·QLD에만 적용합니다. 이후 배당이 목표 아래로 내려가도 기존 전략으로 돌아가지 않습니다.</p>
+            <p class="strategy-help" data-tpl="기존 {2}는 팔지 않고 추가 매수·재투자를 중단합니다. 연간 비중 조정도 {0}·{1}에만 적용합니다. 이후 배당이 목표 아래로 내려가도 기존 전략으로 돌아가지 않습니다.">기존 JEPQ는 팔지 않고 추가 매수·재투자를 중단합니다. 연간 비중 조정도 VOO·QLD에만 적용합니다. 이후 배당이 목표 아래로 내려가도 기존 전략으로 돌아가지 않습니다.</p>
           </div>
         </fieldset>
 
@@ -432,16 +476,18 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
 
             <div class="assumption-group">
               <h3>ETF 구조와 비용</h3>
+              <p class="fee-note" style="margin-top:0">위에서 ETF를 고르면 자동으로 채워집니다. 목록에 없는 ETF는 여기서 직접 맞춰 주세요.</p>
+              <h4 class="slot-title" data-tpl="ETF ① {0}">ETF ① VOO</h4>
               <div class="assumption-grid">
-                <div class="field"><label for="divV">VOO 분배율</label><div class="input-shell"><input type="number" id="divV" value="1.3" min="0" step="0.1"><span class="unit">%</span></div></div>
-                <div class="field"><label for="feeV">VOO 보수</label><div class="input-shell"><input type="number" id="feeV" value="0.03" min="0" step="0.01"><span class="unit">%</span></div></div>
-                <div class="field"><label for="divQ">QLD 분배율</label><div class="input-shell"><input type="number" id="divQ" value="0.3" min="0" step="0.1"><span class="unit">%</span></div></div>
-                <div class="field"><label for="feeQ">QLD 보수</label><div class="input-shell"><input type="number" id="feeQ" value="0.95" min="0" step="0.05"><span class="unit">%</span></div></div>
-                <div class="field"><label for="borrow">QLD 차입비용(1배분)</label><div class="input-shell"><input type="number" id="borrow" value="3.5" min="0" step="0.1"><span class="unit">%</span></div></div>
-                <div class="field"><label for="divJ">JEPQ 분배율</label><div class="input-shell"><input type="number" id="divJ" value="10" min="0" step="0.5"><span class="unit">%</span></div></div>
-                <div class="field"><label for="feeJ">JEPQ 보수</label><div class="input-shell"><input type="number" id="feeJ" value="0.35" min="0" step="0.05"><span class="unit">%</span></div></div>
-                <div class="field"><label for="betaJ">JEPQ 나스닥 베타</label><input type="number" id="betaJ" value="0.65" min="0" max="2" step="0.05"><span class="field-help">공식 설정 이후 베타 참고값</span></div>
-                <div class="field"><label for="alphaJ">옵션 프리미엄 순효과</label><div class="input-shell"><input type="number" id="alphaJ" value="7" step="0.5"><span class="unit">%/년</span></div></div>
+                <div class="select-field"><label for="under0">기초지수</label><select id="under0"><option value="sp" selected>S&amp;P500</option><option value="ndx">나스닥100</option></select></div><div class="field"><label for="beta0">지수 민감도</label><input type="number" id="beta0" value="1" min="0" max="3" step="0.05"></div><div class="select-field"><label for="lev0">레버리지</label><select id="lev0"><option value="1" selected>1배</option><option value="2">2배</option><option value="3">3배</option></select></div><div class="field"><label for="feeV">보수</label><div class="input-shell"><input type="number" id="feeV" value="0.03" min="0" step="0.01"><span class="unit">%</span></div></div><div class="field"><label for="divV">분배율</label><div class="input-shell"><input type="number" id="divV" value="1.3" min="0" step="0.1"><span class="unit">%</span></div></div><div class="select-field"><label for="freq0">분배 주기</label><select id="freq0"><option value="12">매월</option><option value="4" selected>분기</option><option value="1">연 1회</option></select></div>
+              </div>
+              <h4 class="slot-title" data-tpl="ETF ② {1}">ETF ② QLD</h4>
+              <div class="assumption-grid">
+                <div class="select-field"><label for="under1">기초지수</label><select id="under1"><option value="sp">S&amp;P500</option><option value="ndx" selected>나스닥100</option></select></div><div class="field"><label for="beta1">지수 민감도</label><input type="number" id="beta1" value="1" min="0" max="3" step="0.05"></div><div class="select-field"><label for="lev1">레버리지</label><select id="lev1"><option value="1">1배</option><option value="2" selected>2배</option><option value="3">3배</option></select></div><div class="field"><label for="feeQ">보수</label><div class="input-shell"><input type="number" id="feeQ" value="0.95" min="0" step="0.05"><span class="unit">%</span></div></div><div class="field"><label for="divQ">분배율</label><div class="input-shell"><input type="number" id="divQ" value="0.3" min="0" step="0.1"><span class="unit">%</span></div></div><div class="select-field"><label for="freq1">분배 주기</label><select id="freq1"><option value="12">매월</option><option value="4" selected>분기</option><option value="1">연 1회</option></select></div><div class="field"><label for="borrow">레버리지 차입비용(1배분)</label><div class="input-shell"><input type="number" id="borrow" value="3.5" min="0" step="0.1"><span class="unit">%</span></div></div>
+              </div>
+              <h4 class="slot-title" data-tpl="커버드콜 {2}">커버드콜 JEPQ</h4>
+              <div class="assumption-grid">
+                <div class="select-field"><label for="under2">기초지수</label><select id="under2"><option value="sp">S&amp;P500</option><option value="ndx" selected>나스닥100</option></select></div><div class="field"><label for="betaJ">지수 베타</label><input type="number" id="betaJ" value="0.65" min="0" max="2" step="0.05"><span class="field-help">지수 움직임을 얼마나 따라가는지</span></div><div class="field"><label for="alphaJ">옵션 프리미엄 순효과</label><div class="input-shell"><input type="number" id="alphaJ" value="7" step="0.5"><span class="unit">%/년</span></div></div><div class="field"><label for="feeJ">보수</label><div class="input-shell"><input type="number" id="feeJ" value="0.35" min="0" step="0.05"><span class="unit">%</span></div></div><div class="field"><label for="divJ">분배율</label><div class="input-shell"><input type="number" id="divJ" value="10" min="0" step="0.5"><span class="unit">%</span></div></div>
               </div>
               <p class="fee-note">모든 기대수익률은 배당을 포함한 명목 총수익률입니다. 분배율은 총수익을 가격과 배당으로 나눌 때 사용합니다. <strong id="qldGrowthHint">현재 가정의 QLD 장기 중앙 성장 근사치는 연 9.9%입니다.</strong></p>
             </div>
@@ -546,7 +592,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
           <div class="path-control">
             <label for="stressDrop"><span>추가 시장 폭락률</span><output id="stressDropValue">폭락 없음</output></label>
             <input type="range" id="stressDrop" min="0" max="80" value="0" step="5">
-            <small>0%는 기존 확률모형만 사용합니다. QLD에는 일간 2배 구조가 적용됩니다.</small>
+            <small>0%는 기존 확률모형만 사용합니다. 레버리지 ETF에는 일간 리셋 구조가 적용됩니다.</small>
           </div>
         </div>
         <div class="path-compare" aria-label="누적 투자원금과 선택 경로 종료자산 비교">
@@ -565,9 +611,9 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
         </div>
         <div class="allocation-compare-controls">
           <div class="custom-allocation" aria-label="사용자 비교 비중">
-            <div class="field"><label for="compareVOO">사용자안 VOO</label><div class="input-shell"><input type="number" id="compareVOO" value="60" min="0" step="5"><span class="unit">%</span></div></div>
-            <div class="field"><label for="compareQLD">사용자안 QLD</label><div class="input-shell"><input type="number" id="compareQLD" value="20" min="0" step="5"><span class="unit">%</span></div></div>
-            <div class="field"><label for="compareJEPQ">사용자안 JEPQ</label><div class="input-shell"><input type="number" id="compareJEPQ" value="20" min="0" step="5"><span class="unit">%</span></div></div>
+            <div class="field"><label for="compareVOO" data-tpl="사용자안 {0}">사용자안 VOO</label><div class="input-shell"><input type="number" id="compareVOO" value="60" min="0" step="5"><span class="unit">%</span></div></div>
+            <div class="field"><label for="compareQLD" data-tpl="사용자안 {1}">사용자안 QLD</label><div class="input-shell"><input type="number" id="compareQLD" value="20" min="0" step="5"><span class="unit">%</span></div></div>
+            <div class="field"><label for="compareJEPQ" data-tpl="사용자안 {2}">사용자안 JEPQ</label><div class="input-shell"><input type="number" id="compareJEPQ" value="20" min="0" step="5"><span class="unit">%</span></div></div>
           </div>
           <button type="button" class="compare-button" id="allocationCompareRun">비중별 결과 비교하기</button>
         </div>
@@ -621,7 +667,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
         <summary>연도별 배당과 투자 전환 내역</summary>
         <div class="details-content">
           <div class="inline-select"><label for="divScenario">확인할 경로</label><select id="divScenario"><option value="0.1">낮은 결과 10%</option><option value="0.5" selected>중앙 결과</option><option value="0.9">높은 결과 10%</option></select></div>
-          <p class="details-copy">납입액은 초기 일시금·재투자 배당을 제외한 새 투자금이며 명목 원화로 표시합니다. 배당의 월평균은 연간 합계 ÷ 12로, 전환 조건을 판단하는 해당 월의 JEPQ 실제 지급액과 다릅니다.</p>
+          <p class="details-copy">납입액은 초기 일시금·재투자 배당을 제외한 새 투자금이며 명목 원화로 표시합니다. 배당의 월평균은 연간 합계 ÷ 12로, 전환 조건을 판단하는 해당 월의 커버드콜 ETF 실제 지급액과 다릅니다.</p>
           <div class="table-scroll"><table id="divTable"><caption class="sr-only">선택한 동일 경로의 연도별 세후 배당 내역</caption></table></div>
         </div>
       </details>
@@ -631,12 +677,12 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
         <div class="details-content">
           <div class="model-grid">
             <div class="model-note"><strong>현재 자산과 앞으로의 투자</strong><p>기존 ETF는 입력한 평가액·취득원가로 시작합니다. 새 투자금에만 투자 비중을 적용하며, 연간 비중 조정을 켠 경우에만 연말에 기존 보유분도 조정합니다. VOO 단독 비교는 같은 시작 평가액과 합산 취득원가를 부여한 가상 포트폴리오로, 실제 교체 매매 시 세금은 계산하지 않습니다.</p></div>
-            <div class="model-note"><strong>배당 회계</strong><p>지수 총수익에서 지급일에 분배금을 한 번만 떼고, 원천징수 후 선택한 자산에 투자하거나 현금으로 보관합니다. 배당락은 지급액만큼의 기계적 가격 조정일 뿐 이후의 가격 회복·성장을 막는 손실로 가정하지 않습니다. VOO·QLD는 분기, JEPQ는 매월 지급으로 가정합니다.</p></div>
-            <div class="model-note"><strong>QLD 일간 리셋</strong><p>연 252거래일 기준으로 나스닥100 일수익률의 2배에서 보수와 차입비용을 차감합니다. 월간 수익률 단순 2배가 아닙니다.</p></div>
+            <div class="model-note"><strong>배당 회계</strong><p>지수 총수익에서 지급일에 분배금을 한 번만 떼고, 원천징수 후 선택한 자산에 투자하거나 현금으로 보관합니다. 배당락은 지급액만큼의 기계적 가격 조정일 뿐 이후의 가격 회복·성장을 막는 손실로 가정하지 않습니다. ETF ①·②는 상세 가정의 분배 주기(기본 분기), 커버드콜 ETF는 매월 지급으로 가정합니다. VOO 100% 비교 기준은 보수 0.03%·분배율 1.3%로 고정합니다.</p></div>
+            <div class="model-note"><strong>지수 근사와 일간 리셋</strong><p>ETF ①·②는 선택한 기초지수(S&amp;P500 또는 나스닥100)의 일수익률 × 민감도 × 레버리지에서 보수와 차입비용(레버리지-1배분)을 차감합니다. 레버리지는 연 252거래일 일간 리셋으로, 월간 수익률 단순 배수가 아닙니다. 섹터·해외·배당 ETF는 두 지수와의 민감도로 근사하므로 실제 움직임과 다를 수 있습니다.</p></div>
             <div class="model-note"><strong>양도세와 취득원가</strong><p>이동평균 방식으로 외부 납입금·재투자 배당·리밸런싱 매수의 원화 취득원가를 추적합니다. 같은 해 실현손익을 합산하고 연 기본공제를 적용합니다.</p></div>
             <div class="model-note"><strong>환율과 물가</strong><p>USD/KRW를 별도 확률과정으로 반영합니다. 세금은 명목 원화로 먼저 계산하고, 오늘 가치는 그 뒤 물가상승률로 환산합니다.</p></div>
-            <div class="model-note"><strong>JEPQ 단순화</strong><p>나스닥 베타와 옵션 프리미엄 순효과로 총수익을 근사합니다. 실제 액티브 종목선정·ELN 가격·변동성별 프리미엄은 완전히 재현하지 못합니다. 과도하게 성장을 누르던 월 4% 하드캡은 적용하지 않습니다.</p></div>
-            <div class="model-note"><strong>조건에 따른 전략 전환</strong><p>JEPQ가 해당 월에 실제 지급한 원천징수 후 명목 원화 배당으로 목표를 판정합니다. 달성 월의 배당부터 지정한 처리 방식을 적용하고, 신규 납입금은 다음 달부터 VOO·QLD로 배분합니다. 기존 JEPQ는 리밸런싱과 세금 납부용 차감 대상에서 제외됩니다. 목표에 한 번 도달해도 이후 월 배당은 줄어들 수 있습니다.</p></div>
+            <div class="model-note"><strong>커버드콜 단순화</strong><p>기초지수 베타와 옵션 프리미엄 순효과로 총수익을 근사합니다. 실제 액티브 종목선정·ELN 가격·변동성별 프리미엄은 완전히 재현하지 못합니다. 과도하게 성장을 누르던 월 4% 하드캡은 적용하지 않습니다.</p></div>
+            <div class="model-note"><strong>조건에 따른 전략 전환</strong><p>커버드콜 ETF가 해당 월에 실제 지급한 원천징수 후 명목 원화 배당으로 목표를 판정합니다. 달성 월의 배당부터 지정한 처리 방식을 적용하고, 신규 납입금은 다음 달부터 ETF ①·②로 배분합니다. 기존 커버드콜 ETF는 리밸런싱과 세금 납부용 차감 대상에서 제외됩니다. 목표에 한 번 도달해도 이후 월 배당은 줄어들 수 있습니다.</p></div>
             <div class="model-note"><strong>조건부 시나리오</strong><p>수익률은 로그정규·고정 변동성으로 가정합니다. 급격한 시장 국면 변화, 거래비용, 금융소득종합과세, 세금 납부용 매도의 추가 과세는 반영하지 않습니다.</p></div>
           </div>
         </div>
@@ -657,6 +703,13 @@ function xmur3(str){
 }
 function sfc32(a,b,c,d){return function(){a|=0;b|=0;c|=0;d|=0;let t=(a+b|0)+d|0;d=d+1|0;a=b^b>>>9;b=c+(c<<3)|0;c=c<<21|c>>>11;c=c+t|0;return (t>>>0)/4294967296}}
 function qldDailyReturn(indexReturn,feeDaily,borrowDaily){return Math.max(-0.99,2*indexReturn-feeDaily-borrowDaily)}
+function etfDailyReturn(indexReturn,beta,lev,feeDaily,borrowDaily){return Math.max(-0.99,lev*beta*indexReturn-feeDaily-Math.max(0,lev-1)*borrowDaily)}
+function assetModels(cfg){
+  const A=cfg.assets??[{under:'sp',beta:1,lev:1,freq:4},{under:'ndx',beta:1,lev:2,freq:4},{under:'ndx'}];
+  if(!Array.isArray(A)||A.length!==3||A.some(a=>!['sp','ndx'].includes(a.under)))throw new Error('Invalid asset models');
+  for(const a of A.slice(0,2))if(!(a.beta>=0&&a.beta<=3)||![1,2,3].includes(a.lev)||![1,4,12].includes(a.freq))throw new Error('Invalid asset model');
+  return A
+}
 function totalValue(state){return state.cash+state.h.reduce((a,b)=>a+b,0)}
 function taxOnGain(gain,deduction,rate){return Math.max(0,gain-deduction)*rate}
 function liquidationTax(state,deduction,rate){
@@ -756,7 +809,9 @@ function simulate(cfg){
   const dQ=drift(muQ,volQ),dS=drift(muS,volS),dFX=drift(muFX,volFX);
   const sQ=volQ/Math.sqrt(daysPerYear),sS=volS/Math.sqrt(daysPerYear),sFX=volFX/Math.sqrt(daysPerYear);
   const feeV=pct(cfg.feeV)/daysPerYear,feeQ=pct(cfg.feeQ)/daysPerYear,feeJAnnual=pct(cfg.feeJ),borrow=pct(cfg.borrow)/daysPerYear;
-  const divV=pct(cfg.divV)/4,divQ=pct(cfg.divQ)/4,divJ=pct(cfg.divJ)/12;
+  const A=assetModels(cfg),freq0=A[0].freq,freq1=A[1].freq;
+  const divV=pct(cfg.divV)/freq0,divQ=pct(cfg.divQ)/freq1,divJ=pct(cfg.divJ)/12;
+  const benchFee=pct(cfg.benchFee??cfg.feeV)/daysPerYear,benchDiv=pct(cfg.benchDiv??cfg.divV)/4;
   const betaJ=cfg.betaJ,alphaJ=pct(cfg.alphaJ),withholding=pct(cfg.whTax),cgRate=pct(cfg.cgTax),deduction=cfg.deduction;
   const growth=pct(cfg.growth),inflation=pct(cfg.inflation);
   const stressMonth=Number.isInteger(cfg.stressMonth)?cfg.stressMonth:0,stressDrop=pct(cfg.stressDrop??0),stressDaily=stressDrop>0?Math.pow(1-stressDrop,1/daysPerMonth)-1:0;
@@ -789,15 +844,18 @@ function simulate(cfg){
         if(stressDrop>0&&m+1===stressMonth){rQ=(1+rQ)*(1+stressDaily)-1;rS=(1+rS)*(1+stressDaily)-1}
         const rFX=cfg.fxOn?Math.exp(dFX+sFX*zFX)-1:0;
         const beforeP=totalValue(p),beforeB=totalValue(b);
-        const rV=Math.max(-0.99,rS-feeV),rL=qldDailyReturn(rQ,feeQ,borrow);
-        p.h[0]*=(1+rV)*(1+rFX);p.h[1]*=(1+rL)*(1+rFX);
-        jBetaFactor*=Math.max(.01,1+betaJ*rQ);
+        const idx=u=>u==='sp'?rS:rQ;
+        const r0=etfDailyReturn(idx(A[0].under),A[0].beta,A[0].lev,feeV,borrow),r1=etfDailyReturn(idx(A[1].under),A[1].beta,A[1].lev,feeQ,borrow),rB=Math.max(-0.99,rS-benchFee);
+        p.h[0]*=(1+r0)*(1+rFX);p.h[1]*=(1+r1)*(1+rFX);
+        jBetaFactor*=Math.max(.01,1+betaJ*idx(A[2].under));
         const desired=Math.max(.01,jBetaFactor+(alphaJ-feeJAnnual)*day/daysPerYear);
         const rJ=Math.max(-.99,desired/jPrevFactor-1);jPrevFactor=desired;
         p.h[2]*=(1+rJ)*(1+rFX);
-        b.h[0]*=(1+rV)*(1+rFX);
+        b.h[0]*=(1+rB)*(1+rFX);
         if(day===daysPerMonth){
-          if((m+1)%3===0){monthDiv[0]+=processDividend(p,0,divV,cfg.reinvest,withholding);monthDiv[1]+=processDividend(p,1,divQ,cfg.reinvest,withholding);processDividend(b,0,divV,cfg.reinvest,withholding)}
+          if((m+1)%(12/freq0)===0)monthDiv[0]+=processDividend(p,0,divV,cfg.reinvest,withholding);
+          if((m+1)%(12/freq1)===0)monthDiv[1]+=processDividend(p,1,divQ,cfg.reinvest,withholding);
+          if((m+1)%3===0)processDividend(b,0,benchDiv,cfg.reinvest,withholding);
           const expectedJepqDividend=Math.min(p.h[2],p.h[2]*divJ)*(1-withholding);
           if(switchedAt<0&&shouldSwitch(policy,m+1,expectedJepqDividend)){
             switchedAt=m+1;switchMonths[s]=switchedAt;switchDividends[s]=expectedJepqDividend;p.protectedAsset=2;
@@ -856,12 +914,147 @@ const marketPresets={
   conservative:{muQ:11,volQ:22,muS:9,volS:16,borrow:4},
   historical:{muQ:16,volQ:22.9,muS:11,volS:20.1,borrow:3.5}
 };
+// [ticker, name, kind(index|lev|cc), under(sp|ndx), beta, leverage, fee%, dividend%, payouts/yr, option alpha%/yr (cc only), 설명]
+// 보수·분배율은 공개자료 기준 대략값, beta·alpha는 두 지수 모델에 맞춘 추정치입니다.
+const ETF_DB=[
+  ['VOO','Vanguard S&P 500 ETF','index','sp',1,1,0.03,1.2,4,0,'S&P500 추종 · 초저보수 대표 ETF'],
+  ['IVV','iShares Core S&P 500 ETF','index','sp',1,1,0.03,1.2,4,0,'S&P500 추종 · 블랙록'],
+  ['SPY','SPDR S&P 500 ETF Trust','index','sp',1,1,0.0945,1.2,4,0,'S&P500 추종 · 거래량 1위'],
+  ['VTI','Vanguard Total Stock Market ETF','index','sp',1.02,1,0.03,1.2,4,0,'미국 전체 주식시장'],
+  ['ITOT','iShares Core S&P Total U.S. Stock Market','index','sp',1.02,1,0.03,1.2,4,0,'미국 전체 주식시장'],
+  ['SCHB','Schwab U.S. Broad Market ETF','index','sp',1.02,1,0.03,1.2,4,0,'미국 전체 주식시장'],
+  ['SCHX','Schwab U.S. Large-Cap ETF','index','sp',1,1,0.03,1.2,4,0,'미국 대형주'],
+  ['RSP','Invesco S&P 500 Equal Weight ETF','index','sp',1,1,0.20,1.6,4,0,'S&P500 동일가중'],
+  ['DIA','SPDR Dow Jones Industrial Average ETF','index','sp',0.9,1,0.16,1.5,12,0,'다우존스 30 · 월배당'],
+  ['IWM','iShares Russell 2000 ETF','index','sp',1.15,1,0.19,1.1,4,0,'미국 소형주 (S&P500 근사)'],
+  ['IJR','iShares Core S&P Small-Cap ETF','index','sp',1.1,1,0.06,1.4,4,0,'미국 소형주 (S&P500 근사)'],
+  ['IJH','iShares Core S&P Mid-Cap ETF','index','sp',1.05,1,0.05,1.3,4,0,'미국 중형주 (S&P500 근사)'],
+  ['VO','Vanguard Mid-Cap ETF','index','sp',1.05,1,0.04,1.5,4,0,'미국 중형주 (S&P500 근사)'],
+  ['VB','Vanguard Small-Cap ETF','index','sp',1.1,1,0.05,1.4,4,0,'미국 소형주 (S&P500 근사)'],
+  ['VT','Vanguard Total World Stock ETF','index','sp',0.9,1,0.06,1.9,4,0,'전 세계 주식 (S&P500 근사)'],
+  ['VXUS','Vanguard Total International Stock ETF','index','sp',0.8,1,0.05,2.9,4,0,'미국 외 전 세계 (S&P500 근사)'],
+  ['VEA','Vanguard FTSE Developed Markets ETF','index','sp',0.8,1,0.03,3.0,4,0,'선진국 (S&P500 근사)'],
+  ['VWO','Vanguard FTSE Emerging Markets ETF','index','sp',0.7,1,0.07,3.0,4,0,'신흥국 (S&P500 근사)'],
+  ['SCHD','Schwab U.S. Dividend Equity ETF','index','sp',0.8,1,0.06,3.8,4,0,'배당성장 · 고배당 대표'],
+  ['VIG','Vanguard Dividend Appreciation ETF','index','sp',0.9,1,0.05,1.7,4,0,'배당성장주'],
+  ['VYM','Vanguard High Dividend Yield ETF','index','sp',0.8,1,0.06,2.7,4,0,'고배당주'],
+  ['DGRO','iShares Core Dividend Growth ETF','index','sp',0.85,1,0.08,2.2,4,0,'배당성장주'],
+  ['DGRW','WisdomTree U.S. Quality Dividend Growth','index','sp',0.9,1,0.28,1.5,12,0,'퀄리티 배당성장 · 월배당'],
+  ['HDV','iShares Core High Dividend ETF','index','sp',0.7,1,0.08,3.4,4,0,'고배당 · 방어주'],
+  ['SDY','SPDR S&P Dividend ETF','index','sp',0.8,1,0.35,2.6,4,0,'배당귀족주'],
+  ['NOBL','ProShares S&P 500 Dividend Aristocrats','index','sp',0.85,1,0.35,2.0,4,0,'S&P500 배당귀족'],
+  ['SPYD','SPDR Portfolio S&P 500 High Dividend','index','sp',0.85,1,0.07,4.3,4,0,'S&P500 고배당 80종목'],
+  ['QQQ','Invesco QQQ Trust','index','ndx',1,1,0.20,0.5,4,0,'나스닥100 추종 대표 ETF'],
+  ['QQQM','Invesco NASDAQ 100 ETF','index','ndx',1,1,0.15,0.6,4,0,'나스닥100 · QQQ보다 저보수'],
+  ['ONEQ','Fidelity Nasdaq Composite ETF','index','ndx',0.95,1,0.21,0.6,4,0,'나스닥 종합지수'],
+  ['VUG','Vanguard Growth ETF','index','ndx',0.95,1,0.04,0.5,4,0,'미국 대형 성장주'],
+  ['SCHG','Schwab U.S. Large-Cap Growth ETF','index','ndx',1,1,0.04,0.4,4,0,'미국 대형 성장주'],
+  ['MGK','Vanguard Mega Cap Growth ETF','index','ndx',1,1,0.07,0.4,4,0,'초대형 성장주'],
+  ['IWF','iShares Russell 1000 Growth ETF','index','ndx',0.95,1,0.18,0.4,4,0,'러셀1000 성장주'],
+  ['SPYG','SPDR Portfolio S&P 500 Growth ETF','index','ndx',0.95,1,0.04,0.6,4,0,'S&P500 성장주'],
+  ['VGT','Vanguard Information Technology ETF','index','ndx',1.15,1,0.09,0.5,4,0,'IT 섹터'],
+  ['XLK','Technology Select Sector SPDR','index','ndx',1.1,1,0.08,0.6,4,0,'S&P500 기술 섹터'],
+  ['SMH','VanEck Semiconductor ETF','index','ndx',1.5,1,0.35,0.4,1,0,'반도체 (나스닥100 근사)'],
+  ['SOXX','iShares Semiconductor ETF','index','ndx',1.5,1,0.34,0.6,4,0,'반도체 (나스닥100 근사)'],
+  ['XLF','Financial Select Sector SPDR','index','sp',1.05,1,0.08,1.4,4,0,'금융 섹터 (S&P500 근사)'],
+  ['XLV','Health Care Select Sector SPDR','index','sp',0.7,1,0.08,1.7,4,0,'헬스케어 섹터 (S&P500 근사)'],
+  ['XLE','Energy Select Sector SPDR','index','sp',0.8,1,0.08,3.2,4,0,'에너지 섹터 (S&P500 근사)'],
+  ['QLD','ProShares Ultra QQQ','lev','ndx',1,2,0.95,0.2,4,0,'나스닥100 일간 2배'],
+  ['TQQQ','ProShares UltraPro QQQ','lev','ndx',1,3,0.84,0.5,4,0,'나스닥100 일간 3배'],
+  ['SSO','ProShares Ultra S&P500','lev','sp',1,2,0.89,0.5,4,0,'S&P500 일간 2배'],
+  ['UPRO','ProShares UltraPro S&P500','lev','sp',1,3,0.91,0.6,4,0,'S&P500 일간 3배'],
+  ['SPXL','Direxion Daily S&P 500 Bull 3X','lev','sp',1,3,0.87,0.6,4,0,'S&P500 일간 3배'],
+  ['SOXL','Direxion Daily Semiconductor Bull 3X','lev','ndx',1.5,3,0.75,0.5,4,0,'반도체 일간 3배 (나스닥100 근사)'],
+  ['USD','ProShares Ultra Semiconductors','lev','ndx',1.5,2,0.95,0.1,4,0,'반도체 일간 2배 (나스닥100 근사)'],
+  ['TECL','Direxion Daily Technology Bull 3X','lev','ndx',1.1,3,0.85,0.2,4,0,'기술 섹터 일간 3배'],
+  ['ROM','ProShares Ultra Technology','lev','ndx',1.1,2,0.95,0.1,4,0,'기술 섹터 일간 2배'],
+  ['UWM','ProShares Ultra Russell2000','lev','sp',1.15,2,0.95,0.5,4,0,'소형주 일간 2배 (S&P500 근사)'],
+  ['TNA','Direxion Daily Small Cap Bull 3X','lev','sp',1.15,3,1.0,0.6,4,0,'소형주 일간 3배 (S&P500 근사)'],
+  ['JEPQ','JPMorgan Nasdaq Equity Premium Income','cc','ndx',0.65,1,0.35,10,12,7,'나스닥100 커버드콜(ELN) · 월배당'],
+  ['JEPI','JPMorgan Equity Premium Income','cc','sp',0.6,1,0.35,7.5,12,4,'S&P500 저변동 + 커버드콜(ELN)'],
+  ['QQQI','NEOS Nasdaq-100 High Income ETF','cc','ndx',0.75,1,0.68,14,12,6,'나스닥100 인덱스옵션 · 월배당'],
+  ['SPYI','NEOS S&P 500 High Income ETF','cc','sp',0.75,1,0.68,12,12,5,'S&P500 인덱스옵션 · 월배당'],
+  ['GPIQ','Goldman Sachs Nasdaq-100 Premium Income','cc','ndx',0.75,1,0.29,10,12,5,'나스닥100 부분 커버드콜'],
+  ['GPIX','Goldman Sachs S&P 500 Premium Income','cc','sp',0.75,1,0.29,8,12,4,'S&P500 부분 커버드콜'],
+  ['QYLD','Global X Nasdaq 100 Covered Call ETF','cc','ndx',0.55,1,0.60,12,12,4,'나스닥100 전량 ATM 콜매도'],
+  ['XYLD','Global X S&P 500 Covered Call ETF','cc','sp',0.5,1,0.60,12,12,3,'S&P500 전량 ATM 콜매도'],
+  ['RYLD','Global X Russell 2000 Covered Call ETF','cc','sp',0.6,1,0.60,12,12,3,'러셀2000 커버드콜 (S&P500 근사)'],
+  ['QYLG','Global X Nasdaq 100 Covered Call & Growth','cc','ndx',0.8,1,0.60,6,12,3,'나스닥100 50% 커버드콜'],
+  ['XYLG','Global X S&P 500 Covered Call & Growth','cc','sp',0.8,1,0.60,5,12,2,'S&P500 50% 커버드콜'],
+  ['DIVO','Amplify CWP Enhanced Dividend Income','cc','sp',0.7,1,0.56,4.7,12,2,'배당주 + 선택적 콜매도']
+].map(([ticker,name,kind,under,beta,lev,fee,div,freq,alpha,desc])=>({ticker,name,kind,under,beta,lev,fee,div,freq,alpha,desc}));
+const ETF_MAP=new Map(ETF_DB.map(e=>[e.ticker,e]));
+const DEFAULT_TICKERS=['VOO','QLD','JEPQ'];
+let T=DEFAULT_TICKERS.slice();
+const R=()=>(lastConfig&&lastConfig.tickers)||T;
+const UNDER_LABEL={sp:'S&P500',ndx:'나스닥100'},FREQ_LABEL={12:'매월',4:'분기',1:'연 1회'},KIND_LABEL={index:'지수',lev:'레버리지',cc:'커버드콜',custom:'직접 입력'};
+const escapeHtml=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const slotFields=[
+  {under:'under0',beta:'beta0',lev:'lev0',fee:'feeV',div:'divV',freq:'freq0'},
+  {under:'under1',beta:'beta1',lev:'lev1',fee:'feeQ',div:'divQ',freq:'freq1'},
+  {under:'under2',beta:'betaJ',alpha:'alphaJ',fee:'feeJ',div:'divJ'}
+];
+function searchEtfs(query,slot){
+  const q=query.trim().toUpperCase(),pool=ETF_DB.filter(e=>slot===2?e.kind==='cc':e.kind!=='cc');
+  if(!q)return pool.slice(0,8);
+  const prefix=pool.filter(e=>e.ticker.startsWith(q)).sort((a,b)=>a.ticker.length-b.ticker.length||a.ticker.localeCompare(b.ticker));
+  const text=pool.filter(e=>!e.ticker.startsWith(q)&&(e.name.toUpperCase().includes(q)||e.desc.toUpperCase().includes(q)));
+  return [...prefix,...text].slice(0,10)
+}
+function renderEtfInfo(slot){
+  const f=slotFields[slot],e=ETF_MAP.get(T[slot]),v=id=>$(id).value,custom=!e;
+  const kind=custom?'custom':e.kind,lev=f.lev?Number(v(f.lev)):1;
+  const beta=Number(v(f.beta)),model=slot===2?`${UNDER_LABEL[v(f.under)]} β ${v(f.beta)} + 프리미엄 ${v(f.alpha)}%`:lev>1&&beta===1?`${UNDER_LABEL[v(f.under)]} 일간 ${lev}배`:`${UNDER_LABEL[v(f.under)]} × ${+(beta*lev).toFixed(2)}${lev>1?` (일간 ${lev}배)`:''}`;
+  const freq=slot===2?'매월':FREQ_LABEL[v(f.freq)];
+  $('tickerInfo'+slot).innerHTML=`<div class="etf-info-head"><strong>${escapeHtml(T[slot])}</strong><span class="etf-badge ${kind}">${KIND_LABEL[kind]}</span>${custom?'':`<span>${escapeHtml(e.desc)}</span>`}</div>`+
+    (custom?'<div>목록에 없는 ETF예요. 아래 ‘수익률·비용·세금 상세 가정 → ETF 구조와 비용’에서 기초지수·보수·분배율을 맞춰 주세요.</div>':`<div>${escapeHtml(e.name)}</div>`)+
+    `<dl class="etf-stats"><div><dt>보수</dt><dd>${v(f.fee)}%</dd></div><div><dt>분배율</dt><dd>약 ${v(f.div)}% · ${freq}</dd></div><div><dt>모델 가정</dt><dd>${model}</dd></div></dl>`
+}
+function applyTickerLabels(){
+  document.querySelectorAll('[data-tpl]').forEach(el=>{el.textContent=el.dataset.tpl.replace(/\{(\d)\}/g,(_,i)=>T[i])});
+  updateAllocation();updateHoldingsSummary();updateStrategyControls();updateQldGrowthHint();
+}
+function setTicker(slot,raw,{force=false}={}){
+  const ticker=raw.trim().toUpperCase().replace(/[^A-Z0-9.\-]/g,'').slice(0,10)||DEFAULT_TICKERS[slot];
+  $('ticker'+slot).value=ticker;
+  if(ticker===T[slot]&&!force){renderEtfInfo(slot);return}
+  T[slot]=ticker;
+  const e=ETF_MAP.get(ticker),f=slotFields[slot];
+  if(e){
+    $(f.under).value=e.under;$(f.beta).value=String(e.beta);$(f.fee).value=String(e.fee);$(f.div).value=String(e.div);
+    if(f.lev){$(f.lev).value=String(e.lev);$(f.freq).value=String(e.freq)}
+    if(f.alpha)$(f.alpha).value=String(e.alpha);
+  }
+  renderEtfInfo(slot);applyTickerLabels();setDirty()
+}
+function setupTickerPicker(slot){
+  const input=$('ticker'+slot),list=$('tickerList'+slot);let items=[],active=-1;
+  const close=()=>{list.hidden=true;input.setAttribute('aria-expanded','false');active=-1};
+  const paint=()=>{
+    list.innerHTML=items.length?items.map((e,i)=>`<li role="option" id="tickerOpt${slot}-${i}" data-ticker="${e.ticker}" aria-selected="${i===active}"><span class="t">${e.ticker}</span><span class="n">${escapeHtml(e.name)}</span><span class="m">${KIND_LABEL[e.kind]} · 보수 ${e.fee}% · 분배 ${e.div}%</span></li>`).join(''):`<li class="empty">목록에 없어요. 그대로 확정하면 직접 입력 ETF로 계산합니다.</li>`;
+    list.hidden=false;input.setAttribute('aria-expanded','true');
+    if(active>=0){input.setAttribute('aria-activedescendant',`tickerOpt${slot}-${active}`);const el=list.children[active];el&&el.scrollIntoView&&el.scrollIntoView({block:'nearest'})}else input.removeAttribute('aria-activedescendant')
+  };
+  const open=()=>{items=searchEtfs(input.value,slot);active=-1;paint()};
+  input.addEventListener('focus',()=>{input.select&&input.select();open()});
+  input.addEventListener('input',open);
+  input.addEventListener('keydown',ev=>{
+    if(ev.key==='ArrowDown'||ev.key==='ArrowUp'){ev.preventDefault();if(list.hidden)open();if(!items.length)return;active=(active+(ev.key==='ArrowDown'?1:-1)+items.length)%items.length;paint()}
+    else if(ev.key==='Enter'){ev.preventDefault();setTicker(slot,active>=0?items[active].ticker:input.value);close();input.blur()}
+    else if(ev.key==='Escape'){close();input.value=T[slot]}
+  });
+  input.addEventListener('blur',()=>{setTimeout(()=>{if(document.activeElement!==input){close();setTicker(slot,input.value)}},120)});
+  list.addEventListener('pointerdown',ev=>{const li=ev.target.closest&&ev.target.closest('li[data-ticker]');if(!li)return;ev.preventDefault();setTicker(slot,li.dataset.ticker);close();input.blur()});
+}
 let activeWorker=null,lastResult=null,lastConfig=null,pathChart=null,cashChart=null,viewMode='nominal',scenarioIndexMap=null,allocationWorkers=[],allocationRunId=0;
 
+function growthApprox(slot){
+  const f=slotFields[slot],sp=$(f.under).value==='sp',mu=number(sp?'muS':'muQ')/100,vol=number(sp?'volS':'volQ')/100,lev=Number($(f.lev).value),k=number(f.beta)*lev;
+  return Math.expm1(k*Math.log1p(mu)-k*k*vol*vol/2-number(f.fee)/100-Math.max(0,lev-1)*number('borrow')/100)
+}
 function updateQldGrowthHint(){
-  const mu=number('muQ')/100,vol=number('volQ')/100,fee=number('feeQ')/100,financing=number('borrow')/100;
-  const approx=Math.expm1(2*Math.log1p(mu)-2*vol*vol-fee-financing);
-  $('qldGrowthHint').textContent=Number.isFinite(approx)?`현재 가정의 QLD 장기 중앙 성장 근사치는 연 ${(approx*100).toFixed(1)}%입니다.`:'QLD 장기 중앙 성장 근사치를 계산하려면 가정을 확인해 주세요.'
+  const a=[0,1].map(growthApprox);
+  $('qldGrowthHint').textContent=a.every(Number.isFinite)?`현재 가정의 장기 중앙 성장 근사치는 ${T[0]} 연 ${(a[0]*100).toFixed(1)}%, ${T[1]} 연 ${(a[1]*100).toFixed(1)}%입니다.`:'장기 중앙 성장 근사치를 계산하려면 가정을 확인해 주세요.'
 }
 function applyMarketPreset(name){
   const preset=marketPresets[name];if(!preset)return;
@@ -888,13 +1081,15 @@ function getConfig(){
     strategyMode:$('strategyMode').value,dividendTarget:number('dividendTarget'),switchAfterMonths:number('switchAfterMonths'),postWeights:[number('postVOO'),number('postQLD')],postJepqDividend:$('postJepqDividend').value,
     muQ:number('muQ'),volQ:number('volQ'),muS:number('muS'),volS:number('volS'),rho:number('rho'),divV:number('divV'),feeV:number('feeV'),divQ:number('divQ'),feeQ:number('feeQ'),borrow:number('borrow'),
     divJ:number('divJ'),feeJ:number('feeJ'),betaJ:number('betaJ'),alphaJ:number('alphaJ'),fxMu:number('fxMu'),fxVol:number('fxVol'),fxCorr:number('fxCorr'),
-    whTax:number('whTax'),cgTax:number('cgTax'),deduction:number('deduction'),seed:$('seed').value.trim()
+    whTax:number('whTax'),cgTax:number('cgTax'),deduction:number('deduction'),seed:$('seed').value.trim(),
+    tickers:T.slice(),benchFee:0.03,benchDiv:1.3,
+    assets:[0,1].map(i=>({under:$('under'+i).value,beta:number('beta'+i),lev:Number($('lev'+i).value),freq:Number($('freq'+i).value)})).concat([{under:$('under2').value}])
   }
 }
 function validate(cfg){
   const errors=[];
   form.querySelectorAll('input').forEach(el=>el.removeAttribute('aria-invalid'));
-  const finiteIds=['monthly','initial','years','growth','inflation','wVOO','wQLD','wJEPQ','muQ','volQ','muS','volS','rho','divV','feeV','divQ','feeQ','borrow','divJ','feeJ','betaJ','alphaJ','fxMu','fxVol','fxCorr','whTax','cgTax','deduction'];
+  const finiteIds=['monthly','initial','years','growth','inflation','wVOO','wQLD','wJEPQ','muQ','volQ','muS','volS','rho','divV','feeV','divQ','feeQ','borrow','divJ','feeJ','betaJ','alphaJ','beta0','beta1','fxMu','fxVol','fxCorr','whTax','cgTax','deduction'];
   for(const id of finiteIds)if(!Number.isFinite(number(id))){errors.push('모든 숫자 입력칸을 채워 주세요.');$(id).setAttribute('aria-invalid','true')}
   const bad=(id,condition,message)=>{if(condition){errors.push(message);$(id).setAttribute('aria-invalid','true')}};
   bad('monthly',cfg.monthly<0,'매달 투자금은 0 이상이어야 합니다.');bad('initial',cfg.initial<0,'지금 추가 투자금은 0 이상이어야 합니다.');
@@ -918,15 +1113,16 @@ function validate(cfg){
   bad('rho',Math.abs(cfg.rho)>1,'지수 상관계수는 -1~1이어야 합니다.');bad('fxCorr',Math.abs(cfg.fxCorr)>1,'환율 상관계수는 -1~1이어야 합니다.');
   bad('fxMu',cfg.fxMu<=-100||cfg.fxMu>100,'환율 기대 변화율 범위를 확인해 주세요.');bad('fxVol',cfg.fxVol<0||cfg.fxVol>100,'환율 변동성은 0~100%로 입력해 주세요.');
   for(const id of ['divV','divQ','divJ','feeV','feeQ','feeJ','borrow'])bad(id,number(id)<0||number(id)>100,'분배율과 비용은 0~100%로 입력해 주세요.');
-  bad('betaJ',cfg.betaJ<0||cfg.betaJ>2,'JEPQ 베타는 0~2로 입력해 주세요.');
+  bad('betaJ',cfg.betaJ<0||cfg.betaJ>2,`${T[2]} 베타는 0~2로 입력해 주세요.`);
+  for(const i of [0,1])bad('beta'+i,cfg.assets[i].beta<0||cfg.assets[i].beta>3,`${T[i]} 지수 민감도는 0~3으로 입력해 주세요.`);
   bad('alphaJ',cfg.alphaJ<=-100||cfg.alphaJ>100,'옵션 프리미엄 순효과 범위를 확인해 주세요.');
   bad('whTax',cfg.whTax<0||cfg.whTax>100,'원천징수율은 0~100%여야 합니다.');bad('cgTax',cfg.cgTax<0||cfg.cgTax>100,'양도세율은 0~100%여야 합니다.');bad('deduction',cfg.deduction<0,'기본공제는 0 이상이어야 합니다.');
-  if(cfg.jepqDividendDestination==='split'&&cfg.weights[0]+cfg.weights[1]<=0)errors.push('JEPQ 배당을 나눠 투자하려면 VOO 또는 QLD 신규 투자 비중이 필요합니다.');
+  if(cfg.jepqDividendDestination==='split'&&cfg.weights[0]+cfg.weights[1]<=0)errors.push(`${T[2]} 배당을 나눠 투자하려면 ${T[0]} 또는 ${T[1]} 신규 투자 비중이 필요합니다.`);
   if(cfg.strategyMode!=='none'){
-    if(cfg.strategyMode==='dividend')bad('dividendTarget',!Number.isFinite(cfg.dividendTarget)||cfg.dividendTarget<=0,'JEPQ 월 세후배당 목표는 0보다 크게 입력해 주세요.');
+    if(cfg.strategyMode==='dividend')bad('dividendTarget',!Number.isFinite(cfg.dividendTarget)||cfg.dividendTarget<=0,`${T[2]} 월 세후배당 목표는 0보다 크게 입력해 주세요.`);
     if(cfg.strategyMode==='month')bad('switchAfterMonths',!Number.isInteger(cfg.switchAfterMonths)||cfg.switchAfterMonths<1||cfg.switchAfterMonths>480,'전환 시점은 1~480개월의 정수로 입력해 주세요.');
     cfg.postWeights.forEach((w,i)=>bad(['postVOO','postQLD'][i],!Number.isFinite(w)||w<0,'전환 후 비중은 0 이상의 숫자로 입력해 주세요.'));
-    if(cfg.postWeights.reduce((a,b)=>a+b,0)<=0)errors.push('전환 후 VOO·QLD 비중을 하나 이상 입력해 주세요.');
+    if(cfg.postWeights.reduce((a,b)=>a+b,0)<=0)errors.push(`전환 후 ${T[0]}·${T[1]} 비중을 하나 이상 입력해 주세요.`);
   }
   if(!cfg.seed)errors.push('난수 시드를 입력해 주세요.');
   return [...new Set(errors)]
@@ -934,7 +1130,7 @@ function validate(cfg){
 function updateAllocation(){
   const vals=['wVOO','wQLD','wJEPQ'].map(id=>Math.max(0,number(id)||0)),sum=vals.reduce((a,b)=>a+b,0),colors=['var(--voo)','var(--qld)','var(--jepq)'];
   $('allocBar').innerHTML=sum>0?vals.map((x,i)=>`<span style="width:${x/sum*100}%;background:${colors[i]}"></span>`).join(''):'';
-  $('allocBar').setAttribute('aria-label',sum>0?`실제 계산 비중 VOO ${(vals[0]/sum*100).toFixed(1)}%, QLD ${(vals[1]/sum*100).toFixed(1)}%, JEPQ ${(vals[2]/sum*100).toFixed(1)}%`:'ETF 비중 합계 0%');
+  $('allocBar').setAttribute('aria-label',sum>0?`실제 계산 비중 ${T[0]} ${(vals[0]/sum*100).toFixed(1)}%, ${T[1]} ${(vals[1]/sum*100).toFixed(1)}%, ${T[2]} ${(vals[2]/sum*100).toFixed(1)}%`:'ETF 비중 합계 0%');
   const msg=$('allocMsg');
   if(sum===100){msg.className='allocation-status ok';msg.textContent='✓ 합계 100%'}
   else if(sum>0){msg.className='allocation-status warn';msg.textContent=`입력 합계 ${sum.toFixed(1)}% · 실제 계산은 ${vals.map(x=>(x/sum*100).toFixed(1)+'%').join(' · ')}로 환산`}
@@ -943,7 +1139,7 @@ function updateAllocation(){
 }
 function updateHoldingsSummary(){
   const values=['holdingVOO','holdingQLD','holdingJEPQ'].map(number),total=values.reduce((a,b)=>a+b,0);
-  $('holdingsSummary').textContent=values.some(v=>!Number.isFinite(v)||v<0)||!Number.isFinite(total)?'각 ETF의 현재 평가액을 확인해 주세요.':total>0?`현재 보유 합계 ${fmtMoney(total)} · VOO ${fmtPct(values[0]/total)} / QLD ${fmtPct(values[1]/total)} / JEPQ ${fmtPct(values[2]/total)}`:'현재 보유 ETF가 없다면 0으로 두고 아래 투자 계획만 입력하세요.'
+  $('holdingsSummary').textContent=values.some(v=>!Number.isFinite(v)||v<0)||!Number.isFinite(total)?'각 ETF의 현재 평가액을 확인해 주세요.':total>0?`현재 보유 합계 ${fmtMoney(total)} · ${T[0]} ${fmtPct(values[0]/total)} / ${T[1]} ${fmtPct(values[1]/total)} / ${T[2]} ${fmtPct(values[2]/total)}`:'현재 보유 ETF가 없다면 0으로 두고 아래 투자 계획만 입력하세요.'
 }
 function updateStrategyControls(){
   const mode=$('strategyMode').value,enabled=mode!=='none';
@@ -952,11 +1148,11 @@ function updateStrategyControls(){
   $('monthTriggerField').hidden=mode!=='month';$('switchAfterMonths').disabled=mode!=='month';
   for(const id of ['postVOO','postQLD','postJepqDividend'])$(id).disabled=!enabled;
   const weights=[number('postVOO'),number('postQLD')],sum=weights[0]+weights[1],valid=weights.every(w=>Number.isFinite(w)&&w>=0)&&sum>0;
-  $('postAllocation').textContent=valid?`실제 배분 VOO ${(weights[0]/sum*100).toFixed(1)}% · QLD ${(weights[1]/sum*100).toFixed(1)}% · JEPQ 0%`:'VOO·QLD 비중을 하나 이상 입력해 주세요.';
-  if(mode==='dividend')$('triggerHelp').textContent='각 경로의 해당 월 원천징수 후 JEPQ 배당으로 판단합니다. 달성 다음 달부터 새 투자금 배분이 바뀝니다. 목표는 미래 시점의 명목 원화 금액입니다.';
+  $('postAllocation').textContent=valid?`실제 배분 ${T[0]} ${(weights[0]/sum*100).toFixed(1)}% · ${T[1]} ${(weights[1]/sum*100).toFixed(1)}% · ${T[2]} 0%`:`${T[0]}·${T[1]} 비중을 하나 이상 입력해 주세요.`;
+  if(mode==='dividend')$('triggerHelp').textContent=`각 경로의 해당 월 원천징수 후 ${T[2]} 배당으로 판단합니다. 달성 다음 달부터 새 투자금 배분이 바뀝니다. 목표는 미래 시점의 명목 원화 금액입니다.`;
   if(mode==='month'){
     const month=number('switchAfterMonths'),beyond=month>number('years')*12;
-    $('triggerHelp').textContent=beyond?'지정한 시점이 투자 기간보다 뒤라서 이번 계산에서는 전환되지 않습니다.':`투자 시작 후 ${fmtMonth(month)} 말에 전환합니다. 새 투자금은 다음 달부터, JEPQ 배당은 전환 월부터 바뀐 방식을 적용합니다.`;
+    $('triggerHelp').textContent=beyond?'지정한 시점이 투자 기간보다 뒤라서 이번 계산에서는 전환되지 않습니다.':`투자 시작 후 ${fmtMonth(month)} 말에 전환합니다. 새 투자금은 다음 달부터, ${T[2]} 배당은 전환 월부터 바뀐 방식을 적용합니다.`;
   }
 }
 function setDirty(){
@@ -1004,11 +1200,11 @@ function renderAll(){
   const r=lastResult,c=lastConfig;scenarioIndexMap=sortedScenarioIndices(r);
   const low=indexAt(.1),mid=indexAt(.5),high=indexAt(.9),weights=r.W.map(x=>(x*100).toFixed(0));
   $('resultTitle').textContent=`${c.years}년 뒤 세후 자산 전망`;
-  const strategySummary=r.policy.mode==='none'?'비중 유지':r.policy.mode==='dividend'?`JEPQ 월 세후 ${fmtMoney(c.dividendTarget)} 달성 후 전환`:`${fmtMonth(c.switchAfterMonths)} 후 전환`;
+  const strategySummary=r.policy.mode==='none'?'비중 유지':r.policy.mode==='dividend'?`${R()[2]} 월 세후 ${fmtMoney(c.dividendTarget)} 달성 후 전환`:`${fmtMonth(c.switchAfterMonths)} 후 전환`;
   const marketLabel={balanced:'균형 시장가정',conservative:'보수적 시장가정',historical:'역사 참고 시장가정',custom:'직접 입력 시장가정'}[c.marketPreset]||'직접 입력 시장가정';
   const stressLabel=c.stressDrop>0?`${fmtMonth(c.stressMonth)}에 지수 추가 −${c.stressDrop}%`:'강제 폭락 없음';
   const currentTotal=c.currentHoldings.reduce((a,b)=>a+b,0);
-  $('conditionSummary').textContent=`현재 보유 ${fmtMoney(currentTotal)} + 지금 추가 ${fmtMoney(c.initial)} · 월 ${fmtMoney(c.monthly)} · 신규 투자 비중 VOO ${weights[0]} / QLD ${weights[1]} / JEPQ ${weights[2]} · ${strategySummary} · ${marketLabel} · ${stressLabel} · ${c.fxOn?'환율 반영':'환율 고정'}`;
+  $('conditionSummary').textContent=`현재 보유 ${fmtMoney(currentTotal)} + 지금 추가 ${fmtMoney(c.initial)} · 월 ${fmtMoney(c.monthly)} · 신규 투자 비중 ${R()[0]} ${weights[0]} / ${R()[1]} ${weights[1]} / ${R()[2]} ${weights[2]} · ${strategySummary} · ${marketLabel} · ${stressLabel} · ${c.fxOn?'환율 반영':'환율 고정'}`;
   $('heroLabel').textContent=viewMode==='real'?'일괄 매도 후 예상 자산 · 오늘 가치':'일괄 매도 후 예상 자산 중앙값';
   $('mainValue').textContent=fmtMoney(displayEnd(r.finNet[mid]));
   $('mainMultiple').textContent=`명목 원금 대비 ${(r.finNet[mid]/r.investedTotal).toFixed(1)}배`;
@@ -1027,27 +1223,27 @@ function renderAll(){
   renderStrategyResult(mid);renderComparison(mid);renderScenarioTable();renderAssetTable(mid);renderDividendTable();renderPathChart(low,pathIndex,high,pathP);renderCashChart();
   $('dividendModeChip').textContent=`원천징수 ${c.whTax.toFixed(1)}% 반영`;
   $('pathBasisChip').textContent=viewMode==='real'?'각 시점 전량 매도 후 · 오늘 가치':'각 시점 전량 매도 후 · 명목 원화';
-  const destinationLabel=value=>({self:'JEPQ에 재투자',voo:'VOO에 투자',qld:'QLD에 투자',split:'VOO·QLD에 분할 투자',cash:'현금 보관',redirect:'VOO·QLD에 분할 투자'}[value]||value);
-  const vooQldNote=c.reinvest?'VOO·QLD가 지급한 세후배당은 각각 같은 ETF에 재투자합니다.':'VOO·QLD가 지급한 세후배당은 현금으로 보관합니다.';
-  $('cashNote').textContent=`모든 배당 표시는 ${c.whTax.toFixed(1)}% 원천징수 후 금액입니다. ${vooQldNote} JEPQ 세후배당은 전환 전 ${destinationLabel(r.jepqDestination)}${r.policy.mode!=='none'?`, 전환 후 ${destinationLabel(r.policy.dividend)}`:''}합니다.`
+  const destinationLabel=value=>({self:`${R()[2]}에 재투자`,voo:`${R()[0]}에 투자`,qld:`${R()[1]}에 투자`,split:`${R()[0]}·${R()[1]}에 분할 투자`,cash:'현금 보관',redirect:`${R()[0]}·${R()[1]}에 분할 투자`}[value]||value);
+  const vooQldNote=c.reinvest?`${R()[0]}·${R()[1]}에서 받은 세후배당은 각각 같은 ETF에 재투자합니다.`:`${R()[0]}·${R()[1]}에서 받은 세후배당은 현금으로 보관합니다.`;
+  $('cashNote').textContent=`모든 배당 표시는 ${c.whTax.toFixed(1)}% 원천징수 후 금액입니다. ${vooQldNote} ${R()[2]} 세후배당은 전환 전 ${destinationLabel(r.jepqDestination)}${r.policy.mode!=='none'?`, 전환 후 ${destinationLabel(r.policy.dividend)}`:''}합니다.`
 }
 function renderStrategyResult(i){
   const r=lastResult,c=lastConfig,policy=r.policy,enabled=policy.mode!=='none';
   $('strategyResult').hidden=!enabled;if(!enabled)return;
   const isDividend=policy.mode==='dividend',hits=Array.from(r.switchMonths).filter(m=>m>0).sort((a,b)=>a-b),month=r.switchMonths[i],post=policy.weights.map(w=>(w*100).toFixed(1));
-  $('strategyResultTitle').textContent=isDividend?'JEPQ 배당 목표 후 투자 전환':'지정 시점 후 투자 전환';
+  $('strategyResultTitle').textContent=isDividend?`${R()[2]} 배당 목표 후 투자 전환`:'지정 시점 후 투자 전환';
   $('strategyResultDescription').textContent=isDividend?`월 세후배당 ${fmtWon(c.dividendTarget)} 이상을 처음 지급한 달에 전환합니다. 목표는 명목 원화이며, 원천징수 외 추가 세금은 포함하지 않습니다.`:`${fmtMonth(c.switchAfterMonths)} 말에 전환하며, 새 투자금은 ${c.switchAfterMonths+1}개월차부터 바뀐 비중으로 배분합니다.`;
-  $('strategyBefore').textContent=`VOO ${(r.W[0]*100).toFixed(1)}% · QLD ${(r.W[1]*100).toFixed(1)}% · JEPQ ${(r.W[2]*100).toFixed(1)}%`;
-  $('strategyAfter').textContent=`VOO ${post[0]}% · QLD ${post[1]}% · JEPQ 0%`;
+  $('strategyBefore').textContent=`${R()[0]} ${(r.W[0]*100).toFixed(1)}% · ${R()[1]} ${(r.W[1]*100).toFixed(1)}% · ${R()[2]} ${(r.W[2]*100).toFixed(1)}%`;
+  $('strategyAfter').textContent=`${R()[0]} ${post[0]}% · ${R()[1]} ${post[1]}% · ${R()[2]} 0%`;
   $('switchProbabilityLabel').textContent=isDividend?'기간 내 목표 도달 비율':'기간 내 전환 비율';
   $('switchProbability').textContent=fmtPct(hits.length/r.N);
   $('switchCount').textContent=`${r.N.toLocaleString('ko-KR')}개 경로 중 ${hits.length.toLocaleString('ko-KR')}개 · 가정에 따른 모의 결과`;
   $('switchMedian').textContent=hits.length?fmtMonth(hits[Math.round((hits.length-1)*.5)]):'기간 내 미도달';
   $('centralSwitch').textContent=fmtMonth(month);
-  $('centralSwitchNote').textContent=month>0?`전환 월 JEPQ 세후배당 ${fmtWon(r.switchDividends[i])} · 명목`:'이 경로는 시작 비중을 끝까지 유지했습니다.';
+  $('centralSwitchNote').textContent=month>0?`전환 월 ${R()[2]} 세후배당 ${fmtWon(r.switchDividends[i])} · 명목`:'이 경로는 시작 비중을 끝까지 유지했습니다.';
   $('strategyOutcomeNote').textContent=month>0?(month===r.months?'중앙 결과는 마지막 달에 전환되어 이후 신규 납입금은 없습니다.':`중앙 결과는 ${month+1}개월차 신규 납입부터 전환 비중을 적용합니다.`):'중앙 결과는 조건을 충족하지 못해 전환되지 않았습니다.';
-  const postDividendLabel={split:'VOO·QLD에 전환 비중대로 배분',voo:'VOO에 투자',qld:'QLD에 투자',cash:'현금으로 보관',redirect:'VOO·QLD에 전환 비중대로 배분'}[policy.dividend];
-  $('strategyOutcomeNote').textContent+=` 기존 JEPQ는 매도하지 않고, 전환 월부터 JEPQ 배당은 ${postDividendLabel}합니다. 이후 배당이 목표보다 줄어도 되돌리지 않으며, 목표 배당의 지속을 보장하지 않습니다.`
+  const postDividendLabel={split:`${R()[0]}·${R()[1]}에 전환 비중대로 배분`,voo:`${R()[0]}에 투자`,qld:`${R()[1]}에 투자`,cash:'현금으로 보관',redirect:`${R()[0]}·${R()[1]}에 전환 비중대로 배분`}[policy.dividend];
+  $('strategyOutcomeNote').textContent+=` 기존 ${R()[2]}는 매도하지 않고, 전환 월부터 ${R()[2]} 배당은 ${postDividendLabel}합니다. 이후 배당이 목표보다 줄어도 되돌리지 않으며, 목표 배당의 지속을 보장하지 않습니다.`
 }
 function cancelAllocationComparison(showStale=false){
   allocationRunId++;
@@ -1078,8 +1274,8 @@ async function runAllocationComparison(){
   cancelAllocationComparison();const runId=allocationRunId,simCount=Math.min(1000,cfg.sims),current=cfg.weights.slice();
   const scenarios=[
     {name:'현재 입력 비중',weights:current,current:true},{name:'사용자안',weights:custom},
-    {name:'VOO 100%',weights:[100,0,0]},{name:'QLD 100%',weights:[0,100,0]},
-    {name:'JEPQ 100%',weights:[0,0,100]},{name:'동일 비중',weights:[1,1,1]}
+    {name:`${T[0]} 100%`,weights:[100,0,0]},{name:`${T[1]} 100%`,weights:[0,100,0]},
+    {name:`${T[2]} 100%`,weights:[0,0,100]},{name:'동일 비중',weights:[1,1,1]}
   ];
   $('allocationCompareRun').disabled=true;$('allocationInsight').className='allocation-insight';$('allocationCompareStatus').className='compare-status';$('allocationCompareStatus').textContent=`동일한 ${simCount.toLocaleString('ko-KR')}개 경로로 6개 비중을 계산하고 있습니다…`;
   let completed=0;
@@ -1089,7 +1285,7 @@ async function runAllocationComparison(){
     const baseline=results[0],rows=scenarios.map((scenario,i)=>{const metric=allocationMetrics(results[i]),sum=scenario.weights.reduce((a,b)=>a+b,0),weights=scenario.weights.map(x=>x/sum*100);metric.beat=i===0?null:Array.from(results[i].finNet).filter((x,j)=>x>baseline.finNet[j]).length/results[i].N;return {...scenario,...metric,weights}});
     const bestMedian=Math.max(...rows.map(x=>x.median)),bestFloor=Math.max(...rows.map(x=>x.p10)),bestMdd=Math.max(...rows.map(x=>x.mdd)),bestDividend=Math.max(...rows.map(x=>x.monthlyDividend));
     const ranked=rows.slice().sort((a,b)=>b.median-a.median);
-    $('allocationCompareTable').innerHTML='<thead><tr><th scope="col">구성</th><th scope="col">앞으로 투자 비중</th><th scope="col">세후 중앙</th><th scope="col">원금 대비</th><th scope="col">10~90% 범위</th><th scope="col">원금 미만 확률</th><th scope="col">TWR 중앙</th><th scope="col">MDD 중앙</th><th scope="col">마지막 연차 월배당</th><th scope="col">현재 입력 비중보다 많을 확률</th></tr></thead><tbody>'+ranked.map(r=>`<tr class="${r.current?'current-row':''}"><td>${r.name}</td><td>VOO ${r.weights[0].toFixed(0)} · QLD ${r.weights[1].toFixed(0)} · JEPQ ${r.weights[2].toFixed(0)}</td><td class="${r.median===bestMedian?'best-cell':''}">${fmtMoney(r.median)}</td><td>${(r.median/r.invested).toFixed(2)}배</td><td class="${r.p10===bestFloor?'best-cell':''}">${fmtMoney(r.p10)} – ${fmtMoney(r.p90)}</td><td>${fmtPct(r.loss)}</td><td>${fmtPct(r.twr)}</td><td class="${r.mdd===bestMdd?'best-cell':''}">${fmtPct(r.mdd)}</td><td class="${r.monthlyDividend===bestDividend?'best-cell':''}">${fmtWon(r.monthlyDividend)}</td><td>${r.beat===null?'기준':fmtPct(r.beat)}</td></tr>`).join('')+'</tbody>';
+    $('allocationCompareTable').innerHTML='<thead><tr><th scope="col">구성</th><th scope="col">앞으로 투자 비중</th><th scope="col">세후 중앙</th><th scope="col">원금 대비</th><th scope="col">10~90% 범위</th><th scope="col">원금 미만 확률</th><th scope="col">TWR 중앙</th><th scope="col">MDD 중앙</th><th scope="col">마지막 연차 월배당</th><th scope="col">현재 입력 비중보다 많을 확률</th></tr></thead><tbody>'+ranked.map(r=>`<tr class="${r.current?'current-row':''}"><td>${r.name}</td><td>${T[0]} ${r.weights[0].toFixed(0)} · ${T[1]} ${r.weights[1].toFixed(0)} · ${T[2]} ${r.weights[2].toFixed(0)}</td><td class="${r.median===bestMedian?'best-cell':''}">${fmtMoney(r.median)}</td><td>${(r.median/r.invested).toFixed(2)}배</td><td class="${r.p10===bestFloor?'best-cell':''}">${fmtMoney(r.p10)} – ${fmtMoney(r.p90)}</td><td>${fmtPct(r.loss)}</td><td>${fmtPct(r.twr)}</td><td class="${r.mdd===bestMdd?'best-cell':''}">${fmtPct(r.mdd)}</td><td class="${r.monthlyDividend===bestDividend?'best-cell':''}">${fmtWon(r.monthlyDividend)}</td><td>${r.beat===null?'기준':fmtPct(r.beat)}</td></tr>`).join('')+'</tbody>';
     const medianWinner=rows.find(x=>x.median===bestMedian),floorWinner=rows.find(x=>x.p10===bestFloor),mddWinner=rows.find(x=>x.mdd===bestMdd),incomeWinner=rows.find(x=>x.monthlyDividend===bestDividend);
     $('allocationInsight').textContent=`입력 가정에서는 중앙자산은 ${medianWinner.name} 조합, 10% 하단 방어는 ${floorWinner.name} 조합, MDD 방어는 ${mddWinner.name} 조합, 마지막 연차 배당은 ${incomeWinner.name} 조합이 각각 가장 높았습니다. 한 항목의 1위가 전체적으로 가장 낫다는 뜻은 아닙니다.`;$('allocationInsight').className='allocation-insight show';
     $('allocationCompareStatus').className='compare-status success';$('allocationCompareStatus').textContent=`비교 완료 · 동일 난수 ${simCount.toLocaleString('ko-KR')}회 · 명목 세후 기준`;
@@ -1111,7 +1307,7 @@ function renderScenarioTable(){
   $('scenarioTable').innerHTML='<thead><tr><th scope="col">동일 경로</th><th scope="col">세후 종료자산</th><th scope="col">같은 경로 VOO</th><th scope="col">연평균 TWR</th><th scope="col">최대 하락폭</th><th scope="col">누적 양도세</th><th scope="col">VOO 대비</th>'+(switching?'<th scope="col">전환 시점</th>':'')+'</tr></thead><tbody>'+rows.map(([label,p,cls])=>{const i=indexAt(p),diff=r.finNet[i]-r.benchFinNet[i];return `<tr class="${cls}"><td>${label}</td><td>${fmtMoney(displayEnd(r.finNet[i]))}</td><td>${fmtMoney(displayEnd(r.benchFinNet[i]))}</td><td>${fmtPct(r.twr[i])}</td><td>${fmtPct(r.mdd[i])}</td><td>${fmtMoney(displayEnd(r.taxTotal[i]))}</td><td>${fmtSignedMoney(displayEnd(diff))}</td>${switching?`<td>${fmtMonth(r.switchMonths[i])}</td>`:''}</tr>`}).join('')+'</tbody>'
 }
 function renderAssetTable(i){
-  const r=lastResult,names=['VOO','QLD','JEPQ'],colors=['var(--voo)','var(--qld)','var(--jepq)'];let total=r.cash[i];for(let a=0;a<3;a++)total+=r.assetVals[i*3+a];
+  const r=lastResult,names=R().map(escapeHtml),colors=['var(--voo)','var(--qld)','var(--jepq)'];let total=r.cash[i];for(let a=0;a<3;a++)total+=r.assetVals[i*3+a];
   let rows='';for(let a=0;a<3;a++){const value=r.assetVals[i*3+a],basis=r.assetBasis[i*3+a],reinvested=r.dividendReinvested[i*3+a],gain=value-basis;rows+=`<tr><td><span class="asset-name"><span class="swatch" style="background:${colors[a]}"></span>${names[a]}</span></td><td>${fmtMoney(displayEnd(value))}</td><td>${fmtMoney(displayEnd(basis))}</td><td>${fmtMoney(displayEnd(reinvested))}</td><td>${fmtSignedMoney(displayEnd(gain))}</td><td>${fmtPct(total?value/total:0)}</td></tr>`}
   if(r.cash[i]>0)rows+=`<tr><td><span class="asset-name"><span class="swatch" style="background:var(--cash)"></span>현금 배당</span></td><td>${fmtMoney(displayEnd(r.cash[i]))}</td><td>—</td><td>—</td><td>—</td><td>${fmtPct(total?r.cash[i]/total:0)}</td></tr>`;
   $('assetTable').innerHTML='<thead><tr><th scope="col">자산</th><th scope="col">양도세 전 평가액</th><th scope="col">원화 취득원가</th><th scope="col">누적 배당 재투자액</th><th scope="col">과세상 미실현 손익</th><th scope="col">비중</th></tr></thead><tbody>'+rows+'</tbody>'
@@ -1126,7 +1322,7 @@ function renderDividendTable(){
     const phase=sw<0||sw>month?'전환 전':sw<=y*12?'전환 후':`${sw-y*12}개월차 말 전환`;
     rows+=`<tr><td>${y+1}년차</td>${switching?`<td>${phase}</td>`:''}<td>${fmtMoney(contrib)}</td>${switching?`<td>${fmtMoney(r.annualInvestments[off+2])}</td>`:''}<td>${fmtWon(j/scale)}</td><td>${fmtWon(v/scale)}</td><td>${fmtWon(q/scale)}</td><td>${fmtWon(total/scale)}</td><td>${fmtWon(total/12/scale)}</td><td>${fmtMoney(cum)}</td></tr>`
   }
-  $('divTable').innerHTML='<thead><tr><th scope="col">연차</th>'+(switching?'<th scope="col">전략 단계</th>':'')+'<th scope="col">연간 납입액</th>'+(switching?'<th scope="col">중 JEPQ 납입액</th>':'')+'<th scope="col">JEPQ 배당</th><th scope="col">VOO 배당</th><th scope="col">QLD 배당</th><th scope="col">세후 배당 합계</th><th scope="col">월평균</th><th scope="col">누적 배당</th></tr></thead><tbody>'+rows+'</tbody>'
+  $('divTable').innerHTML='<thead><tr><th scope="col">연차</th>'+(switching?'<th scope="col">전략 단계</th>':'')+'<th scope="col">연간 납입액</th>'+(switching?`<th scope="col">중 ${R()[2]} 납입액</th>`:'')+`<th scope="col">${R()[2]} 배당</th><th scope="col">${R()[0]} 배당</th><th scope="col">${R()[1]} 배당</th>`+'<th scope="col">세후 배당 합계</th><th scope="col">월평균</th><th scope="col">누적 배당</th></tr></thead><tbody>'+rows+'</tbody>'
 }
 function columnQuantiles(arr,cols,col,ps){const values=new Float64Array(lastResult.N);for(let s=0;s<lastResult.N;s++)values[s]=arr[s*cols+col];values.sort();return ps.map(p=>values[Math.round((values.length-1)*p)])}
 function chartOptions(yFormatter){return {responsive:true,maintainAspectRatio:false,animation:reducedMotion?false:{duration:250},interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',align:'end',labels:{color:css('--sub'),usePointStyle:true,boxWidth:8,boxHeight:8,padding:14}},tooltip:{backgroundColor:css('--ink'),titleColor:css('--bg'),bodyColor:css('--bg'),padding:11,callbacks:{label:ctx=>ctx.dataset.label+': '+yFormatter(ctx.parsed.y)}}},scales:{x:{ticks:{color:css('--muted'),maxTicksLimit:10},grid:{display:false}},y:{ticks:{color:css('--muted'),callback:yFormatter},grid:{color:css('--line')}}}}}
@@ -1179,10 +1375,14 @@ function setMobileTab(tab,toTop=true){
 }
 $('tabInputs').addEventListener('click',()=>setMobileTab('inputs'));$('tabResults').addEventListener('click',()=>setMobileTab('results'));
 setMobileTab('inputs',false);
+for(const slot of [0,1,2]){setupTickerPicker(slot);renderEtfInfo(slot)}
+form.addEventListener('input',ev=>{if(ev.target&&/^(under|beta|lev|freq|fee|div|alpha)/.test(ev.target.id))[0,1,2].forEach(renderEtfInfo)});
+form.addEventListener('change',ev=>{if(ev.target&&/^(under|lev|freq)/.test(ev.target.id)){[0,1,2].forEach(renderEtfInfo);updateQldGrowthHint()}});
+applyTickerLabels();
 if(typeof navigator!=='undefined'&&'serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 $('cancel').addEventListener('click',()=>cancelRun());$('mobileRun').addEventListener('click',()=>runSimulation());
 $('newSeed').addEventListener('click',()=>{$('seed').value=String(crypto.getRandomValues(new Uint32Array(1))[0]);setDirty()});
-$('resetDefaults').addEventListener('click',()=>{form.reset();$('pathPercentile').value='0.5';$('stressMonth').value='90';$('stressDrop').value='0';$('compareVOO').value='60';$('compareQLD').value='20';$('compareJEPQ').value='20';updateAllocation();updateQldGrowthHint();updateStressControls();setDirty()});
+$('resetDefaults').addEventListener('click',()=>{form.reset();T=DEFAULT_TICKERS.slice();[0,1,2].forEach(renderEtfInfo);applyTickerLabels();$('pathPercentile').value='0.5';$('stressMonth').value='90';$('stressDrop').value='0';$('compareVOO').value='60';$('compareQLD').value='20';$('compareJEPQ').value='20';updateAllocation();updateQldGrowthHint();updateStressControls();setDirty()});
 $('divScenario').addEventListener('change',renderDividendTable);
 document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{viewMode=button.dataset.view;document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b===button));if(lastResult)renderAll()}));
 updateAllocation();updateQldGrowthHint();updateStressControls();runSimulation({initial:true});
