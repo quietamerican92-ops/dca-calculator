@@ -1,0 +1,16 @@
+{
+  "name": "미국 ETF 적립식 투자 시뮬레이터",
+  "short_name": "적립식 계산기",
+  "description": "VOO, QLD, JEPQ 적립식 투자의 세후 결과와 위험을 비교하는 시뮬레이터",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f6fa",
+  "theme_color": "#0f172a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

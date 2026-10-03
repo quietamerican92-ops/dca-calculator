@@ -2,8 +2,15 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="적립식 계산기">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
 <meta name="description" content="VOO, QLD, JEPQ 적립식 투자의 세후 결과와 위험을 같은 시장 경로에서 비교하는 시뮬레이터">
 <title>미국 ETF 적립식 투자 시뮬레이터</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,16 +22,17 @@
   color-scheme:light;
   --bg:#f3f6fa;--panel:#fff;--panel-2:#f8fafc;--ink:#0f172a;--sub:#526174;--muted:#7b8797;
   --line:#dce3ec;--line-strong:#c8d2df;--primary:#2155d9;--primary-2:#163fa8;--primary-soft:#e9efff;
-  --voo:#2f6fb2;--qld:#d58a11;--jepq:#16856f;--cash:#778399;--good:#08785f;--good-soft:#e7f6f1;
+  --voo:#2f6fb2;--qld:#d58a11;--jepq:#16856f;--cash:#778399;--principal:#7c3aed;--good:#08785f;--good-soft:#e7f6f1;
   --warn:#9a5b08;--warn-soft:#fff5df;--danger:#b42318;--danger-soft:#fff0ee;--shadow:0 14px 40px rgba(23,38,66,.07);
 }
 @media(prefers-color-scheme:dark){
   :root{color-scheme:dark;--bg:#0c131f;--panel:#131d2a;--panel-2:#182433;--ink:#edf3fb;--sub:#adbac9;--muted:#8391a2;
     --line:#29384a;--line-strong:#3a4a5d;--primary:#78a5ff;--primary-2:#9bbcff;--primary-soft:#1b3157;
-    --voo:#75a7dc;--qld:#efb64e;--jepq:#55c7aa;--cash:#a0adbe;--good:#5ad1b2;--good-soft:#15372f;
+    --voo:#75a7dc;--qld:#efb64e;--jepq:#55c7aa;--cash:#a0adbe;--principal:#c39cff;--good:#5ad1b2;--good-soft:#15372f;
     --warn:#f1bc57;--warn-soft:#3b2c14;--danger:#ff8c82;--danger-soft:#3d211f;--shadow:0 18px 46px rgba(0,0,0,.22)}
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans KR",system-ui,-apple-system,"Malgun Gothic",sans-serif;font-size:16px;line-height:1.55;font-variant-numeric:tabular-nums}
 button,input,select{font:inherit}
@@ -53,11 +61,20 @@ legend{display:block;width:100%;padding:0;margin:0 0 11px;font-size:.9rem;font-w
 .field{min-width:0}
 .field.full{grid-column:1/-1}
 .field>label,.select-field>label{display:block;font-size:.875rem;color:var(--sub);font-weight:600;margin:0 0 5px}
-.input-shell{position:relative}
-.input-shell input{padding-right:45px}
-.input-shell .unit{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.78rem;pointer-events:none}
 input[type=number],input[type=text],select{width:100%;height:44px;border:1px solid var(--line-strong);border-radius:10px;background:var(--panel-2);color:var(--ink);padding:0 11px;transition:border-color .15s,box-shadow .15s,background .15s}
 input[type=number]{text-align:right}
+.input-shell{display:flex;align-items:center;min-width:0;border:1px solid var(--line-strong);border-radius:10px;background:var(--panel-2)}
+.input-shell input[type=number]{flex:1 1 0%;min-width:0;width:0;height:42px;border:0;border-radius:10px;background:transparent;padding:0 8px 0 11px}
+.input-shell .unit{position:static;flex:0 0 auto;white-space:nowrap;padding-right:11px;color:var(--muted);font-size:.78rem;pointer-events:none}
+.input-shell:hover{border-color:var(--muted)}
+.input-shell:focus-within{outline:3px solid color-mix(in srgb,var(--primary) 28%,transparent);outline-offset:2px;border-color:var(--primary)}
+.input-shell input:focus-visible{outline:none}
+.input-shell:has(input[aria-invalid=true]){border-color:var(--danger);background:var(--danger-soft)}
+.holding-row{display:grid;grid-template-columns:65px minmax(0,1fr);gap:12px;align-items:center}
+.holdings-summary{margin:12px 0 0;color:var(--sub);font-size:.8125rem;line-height:1.65}
+.initial-basis{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.initial-basis summary{cursor:pointer;color:var(--sub);font-size:.875rem;font-weight:600}
+.initial-basis .weights{margin-top:10px}
 input:hover,select:hover{border-color:var(--muted)}
 input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 28%,transparent);outline-offset:2px;border-color:var(--primary)}
 input[aria-invalid=true]{border-color:var(--danger);background:var(--danger-soft)}
@@ -95,6 +112,7 @@ input[aria-invalid=true]{border-color:var(--danger);background:var(--danger-soft
 .assumption-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .assumption-grid .field>label{font-size:.8125rem;min-height:3em;display:flex;align-items:flex-end}
 .assumption-grid input{height:40px}
+.assumption-grid .input-shell input{height:38px}
 .fee-note{margin:10px 0 0;color:var(--muted);font-size:.7rem}
 .utility-row{display:flex;gap:8px;margin-top:13px}
 .ghost-button{height:40px;border:1px solid var(--line-strong);background:var(--panel);color:var(--sub);border-radius:9px;padding:0 11px;font-size:.76rem;font-weight:600;cursor:pointer}
@@ -132,7 +150,9 @@ body.stale .stale-banner{display:block}
 .hero-card{grid-row:span 2;padding:24px;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--panel),color-mix(in srgb,var(--primary-soft) 55%,var(--panel)))}
 .hero-card:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-85px;top:-95px;background:color-mix(in srgb,var(--primary) 10%,transparent);pointer-events:none}
 .card-label{color:var(--sub);font-size:.78rem;font-weight:600}
-.hero-value{font-size:clamp(2.2rem,5vw,3.65rem);line-height:1.08;letter-spacing:-.055em;margin:10px 0 6px;font-weight:700}
+.hero-value{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:10px 0 6px}
+.hero-value>span:first-child{font-size:clamp(2.2rem,5vw,3.65rem);line-height:1.08;letter-spacing:-.055em;font-weight:700}
+.hero-multiple{font-size:.78rem;line-height:1;letter-spacing:0;color:var(--primary);background:var(--primary-soft);border:1px solid color-mix(in srgb,var(--primary) 20%,var(--line));border-radius:999px;padding:7px 9px;font-weight:700;white-space:nowrap}
 .hero-sub{color:var(--sub);font-size:.79rem}
 .range-box{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:24px;padding-top:17px;border-top:1px solid var(--line)}
 .range-box strong{display:block;font-size:1.08rem;margin-top:2px}
@@ -151,6 +171,27 @@ body.stale .stale-banner{display:block}
 .chartbox.small{height:270px}
 .chart-fallback{display:none;height:100%;place-items:center;color:var(--sub);font-size:.82rem;background:var(--panel-2);border-radius:12px}
 .chart-summary{margin:11px 0 0;color:var(--muted);font-size:.73rem}
+.path-controls{display:grid;grid-template-columns:minmax(190px,1fr) minmax(220px,1.35fr) minmax(220px,1.35fr);gap:10px;margin:-2px 0 13px}
+.path-control{border:1px solid var(--line);border-radius:12px;background:var(--panel-2);padding:11px 12px;min-width:0}
+.path-control label{display:flex;justify-content:space-between;gap:10px;color:var(--sub);font-size:.75rem;font-weight:700;margin-bottom:7px}
+.path-control output{color:var(--ink);font-weight:700;white-space:nowrap}
+.path-control select{height:38px;background:var(--panel)}
+.path-control input[type=range]{width:100%;accent-color:var(--primary);cursor:pointer}
+.path-control small{display:block;color:var(--muted);font-size:.66rem;margin-top:4px;line-height:1.35}
+.path-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;border:1px solid var(--line);border-radius:14px;background:linear-gradient(90deg,color-mix(in srgb,var(--principal) 8%,var(--panel)),var(--panel) 48%,color-mix(in srgb,var(--primary) 8%,var(--panel)));padding:13px 16px;margin-bottom:13px}
+.path-compare-item span{display:block;color:var(--sub);font-size:.7rem;font-weight:600}
+.path-compare-item strong{display:block;font-size:1.22rem;line-height:1.25;margin-top:3px}
+.path-compare-item:first-child strong{color:var(--principal)}
+.path-compare-item:last-child{text-align:right}.path-compare-item:last-child strong{color:var(--primary)}
+.path-compare-item small{display:block;color:var(--muted);font-size:.69rem;margin-top:2px}.path-compare-item small.positive{color:var(--good)}.path-compare-item small.negative{color:var(--danger)}
+.path-compare-arrow{color:var(--muted);font-weight:700}
+.allocation-compare-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;margin-bottom:13px}
+.custom-allocation{display:grid;grid-template-columns:repeat(3,minmax(95px,1fr));gap:9px}
+.custom-allocation .field>label{font-size:.74rem}
+.compare-button{height:44px;border:0;border-radius:10px;background:var(--primary);color:#fff;padding:0 16px;font-weight:700;cursor:pointer;white-space:nowrap}.compare-button:hover{background:var(--primary-2)}.compare-button:disabled{opacity:.58;cursor:wait}
+.compare-status{margin:0 0 11px;color:var(--sub);font-size:.74rem}.compare-status.error{color:var(--danger)}.compare-status.success{color:var(--good)}
+.allocation-insight{display:none;margin:0 0 12px;padding:11px 13px;border-radius:11px;background:var(--primary-soft);color:var(--primary-2);font-size:.76rem}.allocation-insight.show{display:block}
+.allocation-table td:first-child{font-weight:700}.allocation-table .best-cell{color:var(--good);font-weight:700}.allocation-table .current-row{background:color-mix(in srgb,var(--primary-soft) 46%,transparent)}
 .comparison-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .compact-table{width:100%;border-collapse:collapse;font-size:.8rem}
 .compact-table th,.compact-table td{padding:9px 7px;border-bottom:1px solid var(--line);text-align:right}
@@ -186,7 +227,22 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
 .model-note strong{display:block;font-size:.78rem;margin-bottom:4px}
 .model-note p{margin:0;color:var(--sub);font-size:.73rem}
 .disclaimer{margin:18px 4px 0;color:var(--muted);font-size:.72rem;line-height:1.6}
+.strategy-controls{border:1px solid var(--line);border-radius:12px;background:var(--panel-2);padding:13px;margin-top:12px}
+.strategy-controls .field-grid{margin-top:12px}
+.strategy-controls .select-stack{margin-top:13px}
+.strategy-help{margin:10px 0 0;color:var(--sub);font-size:.8125rem;line-height:1.6}
+.strategy-result{border-color:color-mix(in srgb,var(--jepq) 40%,var(--line))}
+.strategy-flow{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-bottom:16px}
+.strategy-phase{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:13px}
+.strategy-phase span{display:block;color:var(--sub);font-size:.8125rem;margin-bottom:4px}
+.strategy-phase strong{font-size:.875rem}
+.strategy-arrow{color:var(--muted)}
+.strategy-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.strategy-metrics .risk-item strong{overflow-wrap:anywhere}
+.strategy-metrics .risk-item span{font-size:.8125rem}
+.strategy-metrics small{display:block;color:var(--sub);font-size:.75rem;margin-top:4px}
 .mobile-run{display:none}
+.mobile-tabs{display:none}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 @media(max-width:1120px){
   .workspace{grid-template-columns:340px minmax(0,1fr)}
@@ -197,13 +253,24 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
   .app{padding:18px 16px 92px}.topbar{display:block}.method-tags{justify-content:flex-start;margin-top:12px}
   .workspace{grid-template-columns:1fr}.control-panel{position:relative;top:auto;max-height:none;overflow:visible}.results{gap:13px}
   .mobile-run{display:flex;position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:20;background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line);border-radius:14px;padding:8px;box-shadow:0 12px 34px rgba(15,23,42,.2);backdrop-filter:blur(12px)}
-  .mobile-run .primary-button{width:100%}.comparison-grid{grid-template-columns:1fr}.control-panel .runbar{display:none}
+  .mobile-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;position:sticky;top:0;z-index:25;margin:0 -16px 14px;padding:8px 16px calc(8px);padding-top:max(8px,env(safe-area-inset-top));background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .mobile-tabs button{height:42px;border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--sub);font-weight:700;cursor:pointer}
+  .mobile-tabs button[aria-selected=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+  .mobile-tabs .tab-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--warn);margin-left:6px;vertical-align:middle;visibility:hidden}
+  body.stale .mobile-tabs .tab-dot{visibility:visible}
+  body.m-inputs .results{display:none}
+  body.m-results .control-panel,body.m-results .mobile-run{display:none}
+  body.m-results .app{padding-bottom:40px}
+  .mobile-run .primary-button{width:100%}.comparison-grid{grid-template-columns:1fr}.control-panel .runbar{display:none}.path-controls{grid-template-columns:1fr 1fr}.path-controls .path-control:first-child{grid-column:1/-1}.allocation-compare-controls{grid-template-columns:1fr}.compare-button{width:100%}
 }
 @media(max-width:600px){
+  .mobile-tabs{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px}
+  body.m-inputs .topbar p,body.m-results .topbar,body.m-inputs .method-tags{display:none}
+  .strategy-flow{grid-template-columns:1fr}.strategy-arrow{display:none}.strategy-metrics{grid-template-columns:1fr}
   .app{padding-left:12px;padding-right:12px}.brand-mark{width:38px;height:38px;border-radius:11px}.topbar p{font-size:.86rem}
   .field-grid{grid-template-columns:1fr 1fr}.summary-grid{grid-template-columns:1fr 1fr}.hero-card{padding:20px;grid-column:1/-1}
   .metric-card{min-height:104px;padding:15px}.metric-card strong{font-size:1.14rem}.result-top{display:block}.view-toggle{display:inline-flex;margin-top:10px}
-  .section-card{padding:17px}.section-head{display:block}.section-chip{display:inline-block;margin-top:8px}.chartbox{height:315px}.chartbox.small{height:245px}
+  .section-card{padding:17px}.section-head{display:block}.section-chip{display:inline-block;margin-top:8px}.chartbox{height:315px}.chartbox.small{height:245px}.path-controls{grid-template-columns:1fr}.path-controls .path-control:first-child{grid-column:auto}.path-compare{grid-template-columns:1fr}.path-compare-arrow{display:none}.path-compare-item:last-child{text-align:left}.custom-allocation{grid-template-columns:1fr 1fr 1fr}
   .risk-list{grid-template-columns:1fr 1fr}.model-grid{grid-template-columns:1fr}.range-box{display:block}.range-box .range-copy{text-align:left;margin-top:7px;max-width:none}
 }
 @media(max-width:390px){.field-grid,.assumption-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.summary-grid{grid-template-columns:1fr}.hero-card{grid-column:auto}.risk-list{grid-template-columns:1fr}}
@@ -230,13 +297,37 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
     </div>
   </header>
 
+  <nav class="mobile-tabs" role="tablist" aria-label="화면 전환">
+    <button type="button" role="tab" id="tabInputs" aria-selected="true" aria-controls="settingsPanel">조건 입력</button>
+    <button type="button" role="tab" id="tabResults" aria-selected="false" aria-controls="results">결과 보기<span class="tab-dot" aria-hidden="true"></span></button>
+  </nav>
+
   <div class="workspace">
-    <aside class="control-panel" aria-label="시뮬레이션 설정">
+    <aside class="control-panel" id="settingsPanel" aria-label="시뮬레이션 설정">
       <div class="control-head">
         <h2>투자 조건</h2>
         <p>필요한 값만 바꾸고 바로 비교해 보세요.</p>
       </div>
       <form id="configForm" novalidate>
+        <fieldset>
+          <legend>현재 보유 중인 ETF</legend>
+          <p class="details-copy" id="holdingsHelp">지금 보유한 ETF의 원화 평가액을 입력하세요. 앞으로 투자할 비중과 별개로 유지됩니다.</p>
+          <div class="weights">
+            <div class="holding-row"><label class="asset-name" for="holdingVOO"><span class="swatch" style="background:var(--voo)"></span>VOO</label><div class="input-shell"><input type="number" id="holdingVOO" value="0" min="0" step="100" aria-describedby="holdingsHelp"><span class="unit">만원</span></div></div>
+            <div class="holding-row"><label class="asset-name" for="holdingQLD"><span class="swatch" style="background:var(--qld)"></span>QLD</label><div class="input-shell"><input type="number" id="holdingQLD" value="0" min="0" step="100" aria-describedby="holdingsHelp"><span class="unit">만원</span></div></div>
+            <div class="holding-row"><label class="asset-name" for="holdingJEPQ"><span class="swatch" style="background:var(--jepq)"></span>JEPQ</label><div class="input-shell"><input type="number" id="holdingJEPQ" value="0" min="0" step="100" aria-describedby="holdingsHelp"><span class="unit">만원</span></div></div>
+          </div>
+          <p class="holdings-summary" id="holdingsSummary" aria-live="polite"></p>
+          <details class="initial-basis">
+            <summary>현재 보유분의 취득원가 입력 · 선택</summary>
+            <p class="strategy-help" id="basisHelp">주당 가격이 아닌 ETF별 원화 총 취득원가입니다. 비워 두면 현재 평가액과 같다고 가정하므로, 과거 평가손익은 세금에 반영되지 않습니다.</p>
+            <div class="weights">
+              <div class="holding-row"><label class="asset-name" for="basisVOO">VOO</label><div class="input-shell"><input type="number" id="basisVOO" min="0" step="100" placeholder="평가액과 동일" aria-describedby="basisHelp"><span class="unit">만원</span></div></div>
+              <div class="holding-row"><label class="asset-name" for="basisQLD">QLD</label><div class="input-shell"><input type="number" id="basisQLD" min="0" step="100" placeholder="평가액과 동일" aria-describedby="basisHelp"><span class="unit">만원</span></div></div>
+              <div class="holding-row"><label class="asset-name" for="basisJEPQ">JEPQ</label><div class="input-shell"><input type="number" id="basisJEPQ" min="0" step="100" placeholder="평가액과 동일" aria-describedby="basisHelp"><span class="unit">만원</span></div></div>
+            </div>
+          </details>
+        </fieldset>
         <fieldset>
           <legend>투자 계획</legend>
           <div class="field-grid">
@@ -245,8 +336,9 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
               <div class="input-shell"><input type="number" id="monthly" value="100" min="0" step="10"><span class="unit">만원</span></div>
             </div>
             <div class="field">
-              <label for="initial">지금 넣을 금액</label>
+              <label for="initial">지금 추가 투자금</label>
               <div class="input-shell"><input type="number" id="initial" value="0" min="0" step="100"><span class="unit">만원</span></div>
+              <span class="field-help">보유 ETF와 별도로 새로 넣을 금액</span>
             </div>
             <div class="field">
               <label for="years">투자 기간</label>
@@ -265,7 +357,8 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
         </fieldset>
 
         <fieldset>
-          <legend>ETF 비중</legend>
+          <legend>앞으로 투자할 비중</legend>
+          <p class="details-copy">매달 투자금과 지금 추가 투자금에만 적용합니다. 기존 보유분은 즉시 재배분하지 않습니다.</p>
           <div class="weights">
             <div class="weight-row"><label class="asset-name" for="wVOO"><span class="swatch" style="background:var(--voo)"></span>VOO</label><div class="input-shell"><input type="number" id="wVOO" value="50" min="0" step="5"><span class="unit">%</span></div></div>
             <div class="weight-row"><label class="asset-name" for="wQLD"><span class="swatch" style="background:var(--qld)"></span>QLD</label><div class="input-shell"><input type="number" id="wQLD" value="20" min="0" step="5"><span class="unit">%</span></div></div>
@@ -278,13 +371,47 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
         <fieldset>
           <legend>운용 방식</legend>
           <div class="select-stack">
-            <div class="select-field"><label for="reinvest">받은 배당금</label><select id="reinvest"><option value="1">다시 투자하기</option><option value="0">현금으로 모으기</option></select></div>
-            <div class="select-field"><label for="rebal">ETF 비중 맞추기</label><select id="rebal"><option value="0">신규 투자금만 배분</option><option value="1">매년 말 원래 비중으로</option></select></div>
+            <div class="select-field"><label for="reinvest">VOO·QLD 배당금</label><select id="reinvest"><option value="1">각 ETF에 다시 투자</option><option value="0">현금으로 모으기</option></select></div>
+            <div class="select-field"><label for="jepqDividendDestination">JEPQ 세후배당 사용처</label><select id="jepqDividendDestination"><option value="split" selected>VOO·QLD에 신규 비중대로</option><option value="voo">VOO에 전부 투자</option><option value="qld">QLD에 전부 투자</option><option value="self">JEPQ에 다시 투자</option><option value="cash">현금으로 모으기</option></select></div>
+            <div class="select-field"><label for="rebal">ETF 비중 맞추기</label><select id="rebal"><option value="0">신규 투자금만 배분</option><option value="1">매년 말 전략 비중으로</option></select></div>
             <div class="select-field"><label for="sims">계산 정밀도</label><select id="sims"><option value="1000">빠르게 · 1,000회</option><option value="3000" selected>기본 · 3,000회</option><option value="6000">정밀 · 6,000회</option></select></div>
             <div class="toggle-row">
               <div class="toggle-copy"><strong>환율 변동 반영</strong><span>USD/KRW 변동을 원화 자산에 반영</span></div>
               <label class="switch"><input type="checkbox" id="fxOn" checked aria-label="환율 변동 반영"><span></span></label>
             </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>중간에 투자 전략 바꾸기</legend>
+          <div class="field">
+            <label for="strategyMode">전환 조건</label>
+            <select id="strategyMode" aria-controls="strategyControls">
+              <option value="none">전환 없이 처음 비중 유지</option>
+              <option value="dividend" selected>JEPQ 월 세후배당 목표 도달</option>
+              <option value="month">지정한 투자 기간이 지난 뒤</option>
+            </select>
+          </div>
+          <div class="strategy-controls" id="strategyControls">
+            <div class="field" id="dividendTriggerField">
+              <label for="dividendTarget">JEPQ 월 세후배당 목표</label>
+              <div class="input-shell"><input type="number" id="dividendTarget" value="100" min="0" step="10" aria-describedby="triggerHelp"><span class="unit">만원</span></div>
+            </div>
+            <div class="field" id="monthTriggerField" hidden>
+              <label for="switchAfterMonths">투자 시작 후 경과 기간</label>
+              <div class="input-shell"><input type="number" id="switchAfterMonths" value="120" min="1" max="480" step="1" aria-describedby="triggerHelp" disabled><span class="unit">개월</span></div>
+            </div>
+            <p class="strategy-help" id="triggerHelp">매월 말 JEPQ의 원천징수 후 실제 지급액을 확인합니다. 처음 목표에 도달한 다음 달부터 투자금 배분이 바뀝니다.</p>
+            <div class="field-grid">
+              <div class="field"><label for="postVOO">전환 후 VOO</label><div class="input-shell"><input type="number" id="postVOO" value="70" min="0" step="5"><span class="unit">%</span></div></div>
+              <div class="field"><label for="postQLD">전환 후 QLD</label><div class="input-shell"><input type="number" id="postQLD" value="30" min="0" step="5"><span class="unit">%</span></div></div>
+            </div>
+            <p class="strategy-help" id="postAllocation" aria-live="polite"></p>
+            <div class="field" style="margin-top:12px">
+              <label for="postJepqDividend">전환 시점부터 받는 JEPQ 배당</label>
+              <select id="postJepqDividend"><option value="split">VOO·QLD에 전환 후 비중대로</option><option value="voo">VOO에 전부 투자</option><option value="qld">QLD에 전부 투자</option><option value="cash">현금으로 모으기</option></select>
+            </div>
+            <p class="strategy-help">기존 JEPQ는 팔지 않고 추가 매수·재투자를 중단합니다. 연간 비중 조정도 VOO·QLD에만 적용합니다. 이후 배당이 목표 아래로 내려가도 기존 전략으로 돌아가지 않습니다.</p>
           </div>
         </fieldset>
 
@@ -294,8 +421,9 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
             <div class="assumption-group">
               <h3>시장 총수익률</h3>
               <div class="assumption-grid">
-                <div class="field"><label for="muQ">나스닥100 기대 총수익률</label><div class="input-shell"><input type="number" id="muQ" value="11" step="0.5"><span class="unit">%</span></div></div>
-                <div class="field"><label for="volQ">나스닥100 변동성</label><div class="input-shell"><input type="number" id="volQ" value="22" min="0" step="1"><span class="unit">%</span></div></div>
+                <div class="select-field"><label for="marketPreset">시장 가정 프리셋</label><select id="marketPreset"><option value="balanced" selected>균형 기준 · 장기성과 할인</option><option value="conservative">보수적 · 낮은 성장</option><option value="historical">역사 참고 · 2008~2025</option><option value="custom">직접 입력</option></select></div>
+                <div class="field"><label for="muQ">나스닥100 기대 총수익률</label><div class="input-shell"><input type="number" id="muQ" value="13" step="0.5"><span class="unit">%</span></div></div>
+                <div class="field"><label for="volQ">나스닥100 변동성</label><div class="input-shell"><input type="number" id="volQ" value="23" min="0" step="0.1"><span class="unit">%</span></div></div>
                 <div class="field"><label for="muS">S&amp;P500 기대 총수익률</label><div class="input-shell"><input type="number" id="muS" value="9" step="0.5"><span class="unit">%</span></div></div>
                 <div class="field"><label for="volS">S&amp;P500 변동성</label><div class="input-shell"><input type="number" id="volS" value="16" min="0" step="1"><span class="unit">%</span></div></div>
                 <div class="field"><label for="rho">두 지수 상관계수</label><input type="number" id="rho" value="0.9" min="-1" max="1" step="0.05"></div>
@@ -309,14 +437,13 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
                 <div class="field"><label for="feeV">VOO 보수</label><div class="input-shell"><input type="number" id="feeV" value="0.03" min="0" step="0.01"><span class="unit">%</span></div></div>
                 <div class="field"><label for="divQ">QLD 분배율</label><div class="input-shell"><input type="number" id="divQ" value="0.3" min="0" step="0.1"><span class="unit">%</span></div></div>
                 <div class="field"><label for="feeQ">QLD 보수</label><div class="input-shell"><input type="number" id="feeQ" value="0.95" min="0" step="0.05"><span class="unit">%</span></div></div>
-                <div class="field"><label for="borrow">QLD 차입비용(1배분)</label><div class="input-shell"><input type="number" id="borrow" value="4" min="0" step="0.25"><span class="unit">%</span></div></div>
+                <div class="field"><label for="borrow">QLD 차입비용(1배분)</label><div class="input-shell"><input type="number" id="borrow" value="3.5" min="0" step="0.1"><span class="unit">%</span></div></div>
                 <div class="field"><label for="divJ">JEPQ 분배율</label><div class="input-shell"><input type="number" id="divJ" value="10" min="0" step="0.5"><span class="unit">%</span></div></div>
                 <div class="field"><label for="feeJ">JEPQ 보수</label><div class="input-shell"><input type="number" id="feeJ" value="0.35" min="0" step="0.05"><span class="unit">%</span></div></div>
-                <div class="field"><label for="betaJ">JEPQ 나스닥 베타</label><input type="number" id="betaJ" value="0.8" min="0" max="2" step="0.05"></div>
-                <div class="field"><label for="capJ">JEPQ 월 상승 상한</label><div class="input-shell"><input type="number" id="capJ" value="4" min="0" step="0.5"><span class="unit">%</span></div></div>
+                <div class="field"><label for="betaJ">JEPQ 나스닥 베타</label><input type="number" id="betaJ" value="0.65" min="0" max="2" step="0.05"><span class="field-help">공식 설정 이후 베타 참고값</span></div>
                 <div class="field"><label for="alphaJ">옵션 프리미엄 순효과</label><div class="input-shell"><input type="number" id="alphaJ" value="7" step="0.5"><span class="unit">%/년</span></div></div>
               </div>
-              <p class="fee-note">모든 기대수익률은 배당을 포함한 명목 총수익률입니다. 분배율은 총수익을 가격과 배당으로 나눌 때 사용합니다.</p>
+              <p class="fee-note">모든 기대수익률은 배당을 포함한 명목 총수익률입니다. 분배율은 총수익을 가격과 배당으로 나눌 때 사용합니다. <strong id="qldGrowthHint">현재 가정의 QLD 장기 중앙 성장 근사치는 연 9.9%입니다.</strong></p>
             </div>
 
             <div class="assumption-group">
@@ -325,7 +452,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
                 <div class="field"><label for="fxMu">USD/KRW 기대 변화율</label><div class="input-shell"><input type="number" id="fxMu" value="0" step="0.5"><span class="unit">%/년</span></div></div>
                 <div class="field"><label for="fxVol">USD/KRW 변동성</label><div class="input-shell"><input type="number" id="fxVol" value="10" min="0" step="1"><span class="unit">%</span></div></div>
                 <div class="field"><label for="fxCorr">환율·S&amp;P 상관계수</label><input type="number" id="fxCorr" value="-0.25" min="-1" max="1" step="0.05"></div>
-                <div class="field"><label for="whTax">배당 원천징수</label><div class="input-shell"><input type="number" id="whTax" value="15" min="0" max="100" step="1"><span class="unit">%</span></div></div>
+                <div class="field"><label for="whTax">배당 원천징수율</label><div class="input-shell"><input type="number" id="whTax" value="15" min="0" max="100" step="0.1"><span class="unit">%</span></div><span class="field-help">한미 조세조약 기본 15% · 실제 계좌에 맞게 수정</span></div>
                 <div class="field"><label for="cgTax">해외주식 양도세율</label><div class="input-shell"><input type="number" id="cgTax" value="22" min="0" max="100" step="1"><span class="unit">%</span></div></div>
                 <div class="field"><label for="deduction">연 기본공제</label><div class="input-shell"><input type="number" id="deduction" value="250" min="0" step="10"><span class="unit">만원</span></div></div>
               </div>
@@ -372,31 +499,86 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
       <section class="summary-grid" aria-label="핵심 결과">
         <article class="card hero-card">
           <span class="card-label" id="heroLabel">일괄 매도 후 예상 자산 중앙값</span>
-          <div class="hero-value" id="mainValue">—</div>
+          <div class="hero-value"><span id="mainValue">—</span><span class="hero-multiple" id="mainMultiple">—</span></div>
           <div class="hero-sub" id="mainSub">세전 평가액과 예상 세금을 함께 계산합니다.</div>
           <div class="range-box">
             <div><span class="card-label">80% 예상 범위</span><strong id="rangeValue">—</strong></div>
             <div class="range-copy">가정이 맞다는 조건에서 10개 경로 중 약 8개가 이 범위에 들어옵니다.</div>
           </div>
         </article>
-        <article class="card metric-card"><span class="card-label">총 납입액</span><strong id="investedValue">—</strong><small>매월 초 투자 기준</small></article>
-        <article class="card metric-card"><span class="card-label">원금보다 적을 확률</span><strong id="lossValue">—</strong><small>세후 명목금액 기준</small></article>
+        <article class="card metric-card"><span class="card-label">시작 자산 + 신규 투자금</span><strong id="investedValue">—</strong><small>현재 평가액 + 추가·월 납입액</small></article>
+        <article class="card metric-card"><span class="card-label">비교 기준금액 미만 비율</span><strong id="lossValue">—</strong><small>시작 자산 + 신규 투자금 대비 · 세후 명목</small></article>
         <article class="card metric-card"><span class="card-label">VOO보다 많을 확률</span><strong id="beatValue">—</strong><small>같은 시장·환율 경로 비교</small></article>
         <article class="card metric-card"><span class="card-label" id="altValueLabel">오늘 가치 중앙값</span><strong id="altValue">—</strong><small id="altValueNote">물가를 반영한 구매력</small></article>
       </section>
 
+      <section class="card section-card strategy-result" id="strategyResult" hidden aria-label="투자 전략 전환 결과">
+        <div class="section-head"><div><h3 id="strategyResultTitle">JEPQ 배당 목표 후 투자 전환</h3><p id="strategyResultDescription"></p></div><span class="section-chip">각 시장 경로에서 별도로 판단</span></div>
+        <div class="strategy-flow">
+          <div class="strategy-phase"><span>1단계 · 전환 전 신규 투자금</span><strong id="strategyBefore">—</strong></div>
+          <span class="strategy-arrow" aria-hidden="true">→</span>
+          <div class="strategy-phase"><span>2단계 · 전환 후 신규 투자금</span><strong id="strategyAfter">—</strong></div>
+        </div>
+        <div class="strategy-metrics">
+          <div class="risk-item"><span id="switchProbabilityLabel">기간 내 배당 목표 도달 확률</span><strong id="switchProbability">—</strong><small id="switchCount"></small></div>
+          <div class="risk-item"><span>도달한 경로의 중앙 시점</span><strong id="switchMedian">—</strong><small>미도달 경로는 시점 계산에서 제외</small></div>
+          <div class="risk-item"><span>최종자산 중앙 결과의 도달 시점</span><strong id="centralSwitch">—</strong><small id="centralSwitchNote"></small></div>
+        </div>
+        <p class="strategy-help" id="strategyOutcomeNote"></p>
+      </section>
+
       <section class="card section-card">
         <div class="section-head">
-          <div><h3>투자 기간 동안 자산은 어떻게 달라질 수 있나요?</h3><p>시점별 세후 10–90% 범위와 중앙값입니다. VOO는 동일한 시장 충격으로 계산했습니다.</p></div>
-          <span class="section-chip">일괄 매도 가정 · 원화 기준</span>
+          <div><h3>투자 기간 동안 자산은 어떻게 달라질 수 있나요?</h3><p id="pathDescription">파란 영역은 각 시점 결과의 가운데 80%(10~90백분위)입니다. 실선은 선택한 실제 경로이며, 점선은 그 경로와 같은 시장 충격을 받은 VOO 100%입니다.</p></div>
+          <span class="section-chip" id="pathBasisChip">각 시점 전량 매도 후 · 명목 원화</span>
+        </div>
+        <div class="path-controls" aria-label="경로와 폭락 시나리오 선택">
+          <div class="path-control">
+            <label for="pathPercentile"><span>그래프에 표시할 실제 경로</span></label>
+            <select id="pathPercentile"><option value="0.01">하위 1% 경로</option><option value="0.1">하위 10% 경로</option><option value="0.25">하위 25% 경로</option><option value="0.5" selected>중앙 경로</option><option value="0.75">상위 25% 경로</option><option value="0.9">상위 10% 경로</option><option value="0.95">상위 5% 경로</option><option value="0.99">상위 1% 경로</option></select>
+            <small>최종 세후 총자산 순위로 실제 시뮬레이션 경로 하나를 고릅니다.</small>
+          </div>
+          <div class="path-control">
+            <label for="stressMonth"><span>강제 폭락 시점</span><output id="stressMonthValue">7년 6개월</output></label>
+            <input type="range" id="stressMonth" min="1" max="180" value="90" step="1">
+            <small>선택한 달에 미국 주가지수 전체에 아래의 추가 하락을 한 달 동안 적용합니다.</small>
+          </div>
+          <div class="path-control">
+            <label for="stressDrop"><span>추가 시장 폭락률</span><output id="stressDropValue">폭락 없음</output></label>
+            <input type="range" id="stressDrop" min="0" max="80" value="0" step="5">
+            <small>0%는 기존 확률모형만 사용합니다. QLD에는 일간 2배 구조가 적용됩니다.</small>
+          </div>
+        </div>
+        <div class="path-compare" aria-label="누적 투자원금과 선택 경로 종료자산 비교">
+          <div class="path-compare-item"><span>누적 투자원금</span><strong id="pathPrincipalValue">—</strong><small>현재 평가액 + 추가·월 납입액</small></div>
+          <div class="path-compare-arrow" aria-hidden="true">→</div>
+          <div class="path-compare-item"><span id="pathOutcomeLabel">중앙 경로 종료자산</span><strong id="pathOutcomeValue">—</strong><small id="pathOutcomeDelta">—</small></div>
         </div>
         <div class="chartbox"><canvas id="pathChart" role="img" aria-label="시점별 포트폴리오 세후 자산 범위, 중앙값, VOO 비교, 누적 납입액 차트"></canvas><div class="chart-fallback" id="pathFallback">차트 라이브러리를 불러오지 못했습니다. 아래 표에서 결과를 확인하세요.</div></div>
         <p class="chart-summary" id="pathSummary">계산이 끝나면 차트 요약이 표시됩니다.</p>
       </section>
 
+      <section class="card section-card" aria-labelledby="allocationCompareTitle">
+        <div class="section-head">
+          <div><h3 id="allocationCompareTitle">앞으로 투자할 비중, 어떤 조합이 나을까요?</h3><p>현재 보유 ETF는 그대로 두고 앞으로 넣을 추가·월 투자금의 비중만 바꿉니다. 같은 난수·시장·환율·강제 폭락 경로에서 1,000회 이하로 비교하며, 비중 자체를 보기 위해 전략 전환은 끄고 모든 배당은 각 ETF에 재투자합니다.</p></div>
+          <span class="section-chip">동일 경로 비중 비교</span>
+        </div>
+        <div class="allocation-compare-controls">
+          <div class="custom-allocation" aria-label="사용자 비교 비중">
+            <div class="field"><label for="compareVOO">사용자안 VOO</label><div class="input-shell"><input type="number" id="compareVOO" value="60" min="0" step="5"><span class="unit">%</span></div></div>
+            <div class="field"><label for="compareQLD">사용자안 QLD</label><div class="input-shell"><input type="number" id="compareQLD" value="20" min="0" step="5"><span class="unit">%</span></div></div>
+            <div class="field"><label for="compareJEPQ">사용자안 JEPQ</label><div class="input-shell"><input type="number" id="compareJEPQ" value="20" min="0" step="5"><span class="unit">%</span></div></div>
+          </div>
+          <button type="button" class="compare-button" id="allocationCompareRun">비중별 결과 비교하기</button>
+        </div>
+        <p class="compare-status" id="allocationCompareStatus">현재 입력 비중·사용자안·각 ETF 100%·동일 비중을 비교합니다.</p>
+        <p class="allocation-insight" id="allocationInsight"></p>
+        <div class="table-scroll"><table class="allocation-table" id="allocationCompareTable"><caption class="sr-only">앞으로 투자할 ETF 비중별 결과 비교</caption></table></div>
+      </section>
+
       <div class="comparison-grid">
         <section class="card section-card">
-          <div class="section-head"><div><h3>VOO 100%와 비교</h3><p>현재 포트폴리오의 중앙 결과와 같은 시장 경로입니다.</p></div></div>
+          <div class="section-head"><div><h3>VOO 100%와 비교</h3><p>같은 시작 평가액·총 취득원가·납입금·시장 경로를 가정합니다. 실제 교체 매매는 아닙니다.</p></div></div>
           <table class="compact-table" id="compareTable"><caption class="sr-only">현재 포트폴리오와 VOO 100% 비교</caption></table>
         </section>
         <section class="card section-card">
@@ -430,15 +612,16 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
       <details class="result-details">
         <summary>중앙 결과의 ETF별 평가액과 취득원가</summary>
         <div class="details-content">
-          <p class="details-copy">최종 양도세를 빼기 전 자산별 평가액입니다. 재투자 배당과 리밸런싱 매수금은 취득원가에 포함됩니다.</p>
+          <p class="details-copy">최종 양도세를 빼기 전 자산별 평가액입니다. 취득원가는 외부 투자금·배당 재투자·리밸런싱 매수를 포함하므로 평가액보다 크다고 해서 외부 투자원금 전부에 손실이 났다는 뜻은 아닙니다. 누적 배당 재투자액은 재투자한 주식에서 다시 나온 배당까지 반복 집계한 현금흐름이며, 평가액에 이미 포함되어 있으므로 평가액과 더하거나 별도 원금처럼 비교하지 않습니다.</p>
           <div class="table-scroll"><table id="assetTable"><caption class="sr-only">중앙 결과의 ETF별 평가액과 취득원가</caption></table></div>
         </div>
       </details>
 
       <details class="result-details">
-        <summary>연도별 배당 내역</summary>
+        <summary>연도별 배당과 투자 전환 내역</summary>
         <div class="details-content">
           <div class="inline-select"><label for="divScenario">확인할 경로</label><select id="divScenario"><option value="0.1">낮은 결과 10%</option><option value="0.5" selected>중앙 결과</option><option value="0.9">높은 결과 10%</option></select></div>
+          <p class="details-copy">납입액은 초기 일시금·재투자 배당을 제외한 새 투자금이며 명목 원화로 표시합니다. 배당의 월평균은 연간 합계 ÷ 12로, 전환 조건을 판단하는 해당 월의 JEPQ 실제 지급액과 다릅니다.</p>
           <div class="table-scroll"><table id="divTable"><caption class="sr-only">선택한 동일 경로의 연도별 세후 배당 내역</caption></table></div>
         </div>
       </details>
@@ -447,11 +630,13 @@ tbody tr:hover{background:color-mix(in srgb,var(--primary-soft) 32%,transparent)
         <summary>계산 방식과 꼭 알아둘 한계</summary>
         <div class="details-content">
           <div class="model-grid">
-            <div class="model-note"><strong>배당 회계</strong><p>지수 총수익에서 지급일에 분배금을 한 번만 떼고, 원천징수 후 재투자하거나 현금으로 보관합니다. VOO·QLD는 분기, JEPQ는 매월 지급으로 가정합니다.</p></div>
+            <div class="model-note"><strong>현재 자산과 앞으로의 투자</strong><p>기존 ETF는 입력한 평가액·취득원가로 시작합니다. 새 투자금에만 투자 비중을 적용하며, 연간 비중 조정을 켠 경우에만 연말에 기존 보유분도 조정합니다. VOO 단독 비교는 같은 시작 평가액과 합산 취득원가를 부여한 가상 포트폴리오로, 실제 교체 매매 시 세금은 계산하지 않습니다.</p></div>
+            <div class="model-note"><strong>배당 회계</strong><p>지수 총수익에서 지급일에 분배금을 한 번만 떼고, 원천징수 후 선택한 자산에 투자하거나 현금으로 보관합니다. 배당락은 지급액만큼의 기계적 가격 조정일 뿐 이후의 가격 회복·성장을 막는 손실로 가정하지 않습니다. VOO·QLD는 분기, JEPQ는 매월 지급으로 가정합니다.</p></div>
             <div class="model-note"><strong>QLD 일간 리셋</strong><p>연 252거래일 기준으로 나스닥100 일수익률의 2배에서 보수와 차입비용을 차감합니다. 월간 수익률 단순 2배가 아닙니다.</p></div>
             <div class="model-note"><strong>양도세와 취득원가</strong><p>이동평균 방식으로 외부 납입금·재투자 배당·리밸런싱 매수의 원화 취득원가를 추적합니다. 같은 해 실현손익을 합산하고 연 기본공제를 적용합니다.</p></div>
             <div class="model-note"><strong>환율과 물가</strong><p>USD/KRW를 별도 확률과정으로 반영합니다. 세금은 명목 원화로 먼저 계산하고, 오늘 가치는 그 뒤 물가상승률로 환산합니다.</p></div>
-            <div class="model-note"><strong>JEPQ 단순화</strong><p>나스닥 베타, 월 상승 상한, 옵션 프리미엄의 조합으로 근사합니다. 실제 액티브 종목선정·ELN 가격·변동성별 프리미엄은 완전히 재현하지 못합니다.</p></div>
+            <div class="model-note"><strong>JEPQ 단순화</strong><p>나스닥 베타와 옵션 프리미엄 순효과로 총수익을 근사합니다. 실제 액티브 종목선정·ELN 가격·변동성별 프리미엄은 완전히 재현하지 못합니다. 과도하게 성장을 누르던 월 4% 하드캡은 적용하지 않습니다.</p></div>
+            <div class="model-note"><strong>조건에 따른 전략 전환</strong><p>JEPQ가 해당 월에 실제 지급한 원천징수 후 명목 원화 배당으로 목표를 판정합니다. 달성 월의 배당부터 지정한 처리 방식을 적용하고, 신규 납입금은 다음 달부터 VOO·QLD로 배분합니다. 기존 JEPQ는 리밸런싱과 세금 납부용 차감 대상에서 제외됩니다. 목표에 한 번 도달해도 이후 월 배당은 줄어들 수 있습니다.</p></div>
             <div class="model-note"><strong>조건부 시나리오</strong><p>수익률은 로그정규·고정 변동성으로 가정합니다. 급격한 시장 국면 변화, 거래비용, 금융소득종합과세, 세금 납부용 매도의 추가 과세는 반영하지 않습니다.</p></div>
           </div>
         </div>
@@ -486,21 +671,21 @@ function sellAsset(state,i,amount){
   state.h[i]-=sale;state.basis[i]-=basisSold;
   return sale-basisSold
 }
-function rebalanceState(state,weights){
-  const total=state.h.reduce((a,b)=>a+b,0),target=weights.map(w=>total*w);
+function rebalanceState(state,weights,indices=state.h.map((_,i)=>i)){
+  const total=indices.reduce((sum,i)=>sum+state.h[i],0),target=weights.map(w=>total*w);
   let proceeds=0;
-  for(let i=0;i<state.h.length;i++)if(state.h[i]>target[i]){const sale=state.h[i]-target[i];state.realizedYTD+=sellAsset(state,i,sale);proceeds+=sale}
-  for(let i=0;i<state.h.length;i++)if(state.h[i]<target[i]){const buy=Math.min(target[i]-state.h[i],proceeds);state.h[i]+=buy;state.basis[i]+=buy;proceeds-=buy}
+  for(const i of indices)if(state.h[i]>target[i]){const sale=state.h[i]-target[i];state.realizedYTD+=sellAsset(state,i,sale);proceeds+=sale}
+  for(const i of indices)if(state.h[i]<target[i]){const buy=Math.min(target[i]-state.h[i],proceeds);state.h[i]+=buy;state.basis[i]+=buy;proceeds-=buy}
   if(proceeds>1e-7)state.cash+=proceeds
 }
 function payPortfolioCost(state,amount){
   let left=Math.max(0,amount);
   const fromCash=Math.min(state.cash,left);state.cash-=fromCash;left-=fromCash;
   if(left<=1e-9)return;
-  const total=state.h.reduce((a,b)=>a+b,0);
+  const total=state.h.reduce((sum,value,i)=>sum+(i===state.protectedAsset?0:value),0);
   if(total<=0)return;
   const ratio=Math.min(1,left/total);
-  for(let i=0;i<state.h.length;i++){state.h[i]*=1-ratio;state.basis[i]*=1-ratio}
+  for(let i=0;i<state.h.length;i++)if(i!==state.protectedAsset){state.h[i]*=1-ratio;state.basis[i]*=1-ratio}
 }
 function settleYearTax(state,deduction,rate){
   const tax=taxOnGain(state.realizedYTD,deduction,rate);
@@ -511,67 +696,126 @@ function processDividend(state,i,rate,reinvest,withholding){
   if(!(rate>0)||!(state.h[i]>0))return 0;
   const gross=Math.min(state.h[i],state.h[i]*rate),net=gross*(1-withholding);
   state.h[i]-=gross;
-  if(reinvest){state.h[i]+=net;state.basis[i]+=net}else state.cash+=net;
+  if(reinvest){state.h[i]+=net;state.basis[i]+=net;state.divReinvested[i]+=net}else state.cash+=net;
   return net
 }
-function updatePerformance(state,before){
+function updatePerformance(state,before,dayIndex){
   const after=totalValue(state);
-  if(before>0&&after>=0){state.index*=after/before;state.peak=Math.max(state.peak,state.index);state.mdd=Math.min(state.mdd,state.index/state.peak-1)}
+  if(before>0&&after>=0){state.index*=after/before;state.peak=Math.max(state.peak,state.index);const drawdown=state.index/state.peak-1;if(drawdown<state.mdd){state.mdd=drawdown;state.mddDay=dayIndex}}
 }
-function makeState(values){return {h:values.slice(),basis:values.slice(),cash:0,index:1,peak:1,mdd:0,realizedYTD:0,taxPaid:0}}
+function makeState(values,basis=values){return {h:values.slice(),basis:basis.slice(),divReinvested:values.map(()=>0),cash:0,index:1,peak:1,mdd:0,mddDay:0,realizedYTD:0,taxPaid:0}}
+function initialPortfolio(cfg,weights){
+  const current=cfg.currentHoldings??[0,0,0],cost=cfg.currentBasis??current;
+  for(const values of [current,cost])if(!Array.isArray(values)||values.length!==3||values.some(v=>!Number.isFinite(v)||v<0))throw new Error('Invalid initial holdings or basis');
+  if(current.some((v,i)=>v===0&&cost[i]>0))throw new Error('Acquisition basis requires a holding');
+  const holdings=current.map((v,i)=>v+cfg.initial*weights[i]),basis=cost.map((v,i)=>v+cfg.initial*weights[i]);
+  const value=holdings.reduce((a,b)=>a+b,0),totalBasis=basis.reduce((a,b)=>a+b,0);
+  if(!Number.isFinite(value)||!Number.isFinite(totalBasis))throw new Error('Initial portfolio is too large');
+  return {holdings,basis,value,totalBasis}
+}
+function strategyPolicy(cfg){
+  const mode=cfg.strategyMode??'none';
+  if(!['none','dividend','month'].includes(mode))throw new Error('Unknown strategy mode');
+  const raw=cfg.postWeights??[70,30];
+  if(mode==='none')return {mode,weights:[.7,.3,0],dividend:'split'};
+  const sum=raw[0]+raw[1];
+  if(raw.length!==2||raw.some(x=>!Number.isFinite(x)||x<0)||!Number.isFinite(sum)||sum<=0)throw new Error('Invalid post-switch allocation');
+  if(mode==='dividend'&&(!Number.isFinite(cfg.dividendTarget)||cfg.dividendTarget<=0))throw new Error('Invalid dividend target');
+  if(mode==='month'&&(!Number.isInteger(cfg.switchAfterMonths)||cfg.switchAfterMonths<1||cfg.switchAfterMonths>480))throw new Error('Invalid switch month');
+  let dividend=cfg.postJepqDividend??'split';
+  if(dividend==='redirect')dividend='split';
+  if(!['split','voo','qld','cash'].includes(dividend))throw new Error('Invalid post-switch dividend policy');
+  return {mode,weights:[raw[0]/sum,raw[1]/sum,0],target:cfg.dividendTarget,month:cfg.switchAfterMonths,dividend}
+}
+function dividendDestinationWeights(destination,weights){
+  if(destination==='cash')return null;
+  if(destination==='self')return [0,0,1];
+  if(destination==='voo')return [1,0,0];
+  if(destination==='qld')return [0,1,0];
+  if(destination==='split'){
+    const sum=weights[0]+weights[1];
+    if(!(sum>0))throw new Error('VOO or QLD weight is required for split dividend reinvestment');
+    return [weights[0]/sum,weights[1]/sum,0]
+  }
+  throw new Error('Invalid JEPQ dividend destination')
+}
+function shouldSwitch(policy,month,netDividend){
+  return policy.mode==='dividend'?netDividend>=policy.target:policy.mode==='month'&&month>=policy.month
+}
 function simulate(cfg){
   const pct=x=>x/100,daysPerMonth=21,daysPerYear=252;
   const months=Math.round(cfg.years*12),yearsCount=Math.ceil(months/12),N=cfg.sims;
   const weightSum=cfg.weights.reduce((a,b)=>a+b,0),W=cfg.weights.map(x=>x/weightSum);
+  const start=initialPortfolio(cfg,W),startValue=start.value,startBasis=start.totalBasis;
+  const policy=strategyPolicy(cfg);
+  const jepqDestination=cfg.jepqDividendDestination??(cfg.reinvest?'self':'cash');
+  const beforeJepqWeights=dividendDestinationWeights(jepqDestination,W),afterJepqWeights=policy.mode==='none'?null:dividendDestinationWeights(policy.dividend,policy.weights);
   const muQ=pct(cfg.muQ),volQ=pct(cfg.volQ),muS=pct(cfg.muS),volS=pct(cfg.volS),rho=cfg.rho;
   const muFX=pct(cfg.fxMu),volFX=pct(cfg.fxVol),fxCorr=cfg.fxCorr;
   const drift=(mu,vol)=>(Math.log1p(mu)-vol*vol/2)/daysPerYear;
   const dQ=drift(muQ,volQ),dS=drift(muS,volS),dFX=drift(muFX,volFX);
   const sQ=volQ/Math.sqrt(daysPerYear),sS=volS/Math.sqrt(daysPerYear),sFX=volFX/Math.sqrt(daysPerYear);
-  const feeV=pct(cfg.feeV)/daysPerYear,feeQ=pct(cfg.feeQ)/daysPerYear,feeJ=pct(cfg.feeJ)/daysPerYear,borrow=pct(cfg.borrow)/daysPerYear;
+  const feeV=pct(cfg.feeV)/daysPerYear,feeQ=pct(cfg.feeQ)/daysPerYear,feeJAnnual=pct(cfg.feeJ),borrow=pct(cfg.borrow)/daysPerYear;
   const divV=pct(cfg.divV)/4,divQ=pct(cfg.divQ)/4,divJ=pct(cfg.divJ)/12;
-  const betaJ=cfg.betaJ,capJ=pct(cfg.capJ),alphaJ=pct(cfg.alphaJ),withholding=pct(cfg.whTax),cgRate=pct(cfg.cgTax),deduction=cfg.deduction;
+  const betaJ=cfg.betaJ,alphaJ=pct(cfg.alphaJ),withholding=pct(cfg.whTax),cgRate=pct(cfg.cgTax),deduction=cfg.deduction;
   const growth=pct(cfg.growth),inflation=pct(cfg.inflation);
+  const stressMonth=Number.isInteger(cfg.stressMonth)?cfg.stressMonth:0,stressDrop=pct(cfg.stressDrop??0),stressDaily=stressDrop>0?Math.pow(1-stressDrop,1/daysPerMonth)-1:0;
   const seed=xmur3(String(cfg.seed)),rng=sfc32(seed(),seed(),seed(),seed());
   let spare=null;
   function randn(){if(spare!==null){const x=spare;spare=null;return x}let u=0,v=0;while(u===0)u=rng();v=rng();const r=Math.sqrt(-2*Math.log(u));spare=r*Math.sin(2*Math.PI*v);return r*Math.cos(2*Math.PI*v)}
-  const contrib=new Float64Array(months);let investedTotal=cfg.initial;
+  const contrib=new Float64Array(months);let investedTotal=startValue;
   for(let m=0;m<months;m++){contrib[m]=cfg.monthly*Math.pow(1+growth,Math.floor(m/12));investedTotal+=contrib[m]}
   const paths=new Float32Array(N*(months+1)),benchPaths=new Float32Array(N*(months+1));
   const finGross=new Float64Array(N),finNet=new Float64Array(N),benchFinGross=new Float64Array(N),benchFinNet=new Float64Array(N);
-  const twr=new Float64Array(N),mdd=new Float64Array(N),benchTwr=new Float64Array(N),benchMdd=new Float64Array(N);
+  const twr=new Float64Array(N),mdd=new Float64Array(N),mddAt=new Int16Array(N),benchTwr=new Float64Array(N),benchMdd=new Float64Array(N),benchMddAt=new Int16Array(N);
   const taxTotal=new Float64Array(N),benchTaxTotal=new Float64Array(N),cash=new Float64Array(N);
-  const assetVals=new Float64Array(N*3),assetBasis=new Float64Array(N*3),annualDivs=new Float32Array(N*yearsCount*3);
+  const assetVals=new Float64Array(N*3),assetBasis=new Float64Array(N*3),dividendReinvested=new Float64Array(N*3),annualDivs=new Float32Array(N*yearsCount*3);
+  const switchMonths=new Int16Array(N);switchMonths.fill(-1);
+  const switchDividends=new Float64Array(N),annualInvestments=new Float64Array(N*yearsCount*3);
   const rhoScale=Math.sqrt(Math.max(0,1-rho*rho)),fxScale=Math.sqrt(Math.max(0,1-fxCorr*fxCorr));
   for(let s=0;s<N;s++){
-    const p=makeState([cfg.initial*W[0],cfg.initial*W[1],cfg.initial*W[2]]),b=makeState([cfg.initial]);
-    paths[s*(months+1)]=cfg.initial;benchPaths[s*(months+1)]=cfg.initial;
+    const p=makeState(start.holdings,start.basis),b=makeState([startValue],[startBasis]);
+    let switchedAt=-1;
+    paths[s*(months+1)]=Math.max(0,startValue-liquidationTax(p,deduction,cgRate));benchPaths[s*(months+1)]=Math.max(0,startValue-liquidationTax(b,deduction,cgRate));
     for(let m=0;m<months;m++){
       const c=contrib[m];
-      for(let i=0;i<3;i++){const add=c*W[i];p.h[i]+=add;p.basis[i]+=add}
+      const activeWeights=switchedAt>=0?policy.weights:W;
+      for(let i=0;i<3;i++){const add=c*activeWeights[i];p.h[i]+=add;p.basis[i]+=add;annualInvestments[(s*yearsCount+Math.floor(m/12))*3+i]+=add}
       b.h[0]+=c;b.basis[0]+=c;
       let jBetaFactor=1,jPrevFactor=1,monthDiv=[0,0,0];
       for(let day=1;day<=daysPerMonth;day++){
         const zQ=randn(),zS=rho*zQ+rhoScale*randn(),zFX=fxCorr*zS+fxScale*randn();
-        const rQ=Math.exp(dQ+sQ*zQ)-1,rS=Math.exp(dS+sS*zS)-1;
+        let rQ=Math.exp(dQ+sQ*zQ)-1,rS=Math.exp(dS+sS*zS)-1;
+        if(stressDrop>0&&m+1===stressMonth){rQ=(1+rQ)*(1+stressDaily)-1;rS=(1+rS)*(1+stressDaily)-1}
         const rFX=cfg.fxOn?Math.exp(dFX+sFX*zFX)-1:0;
         const beforeP=totalValue(p),beforeB=totalValue(b);
         const rV=Math.max(-0.99,rS-feeV),rL=qldDailyReturn(rQ,feeQ,borrow);
         p.h[0]*=(1+rV)*(1+rFX);p.h[1]*=(1+rL)*(1+rFX);
         jBetaFactor*=Math.max(.01,1+betaJ*rQ);
-        const desired=Math.max(.01,1+Math.min(jBetaFactor-1,capJ)+(alphaJ-feeJ)*day/daysPerYear);
+        const desired=Math.max(.01,jBetaFactor+(alphaJ-feeJAnnual)*day/daysPerYear);
         const rJ=Math.max(-.99,desired/jPrevFactor-1);jPrevFactor=desired;
         p.h[2]*=(1+rJ)*(1+rFX);
         b.h[0]*=(1+rV)*(1+rFX);
         if(day===daysPerMonth){
           if((m+1)%3===0){monthDiv[0]+=processDividend(p,0,divV,cfg.reinvest,withholding);monthDiv[1]+=processDividend(p,1,divQ,cfg.reinvest,withholding);processDividend(b,0,divV,cfg.reinvest,withholding)}
-          monthDiv[2]+=processDividend(p,2,divJ,cfg.reinvest,withholding);
+          const expectedJepqDividend=Math.min(p.h[2],p.h[2]*divJ)*(1-withholding);
+          if(switchedAt<0&&shouldSwitch(policy,m+1,expectedJepqDividend)){
+            switchedAt=m+1;switchMonths[s]=switchedAt;switchDividends[s]=expectedJepqDividend;p.protectedAsset=2;
+          }
+          const destinationWeights=switchedAt>=0?afterJepqWeights:beforeJepqWeights;
+          const reinvestInJepq=destinationWeights&&destinationWeights[2]===1;
+          const netJepqDividend=processDividend(p,2,divJ,reinvestInJepq,withholding);
+          monthDiv[2]+=netJepqDividend;
+          if(destinationWeights&&!reinvestInJepq){
+            p.cash-=netJepqDividend;
+            for(let i=0;i<2;i++){const purchase=netJepqDividend*destinationWeights[i];p.h[i]+=purchase;p.basis[i]+=purchase;p.divReinvested[i]+=purchase}
+          }
           if(cfg.rebal&&(m+1)%12===0){
-            rebalanceState(p,W);
+            if(switchedAt>=0)rebalanceState(p,policy.weights,[0,1]);else rebalanceState(p,W);
             if(m!==months-1)settleYearTax(p,deduction,cgRate)
           }
         }
-        updatePerformance(p,beforeP);updatePerformance(b,beforeB)
+        const dayIndex=m*daysPerMonth+day;updatePerformance(p,beforeP,dayIndex);updatePerformance(b,beforeB,dayIndex)
       }
       const y=Math.floor(m/12),divOffset=(s*yearsCount+y)*3;
       for(let i=0;i<3;i++)annualDivs[divOffset+i]+=monthDiv[i];
@@ -582,13 +826,13 @@ function simulate(cfg){
     const finalTax=liquidationTax(p,deduction,cgRate),benchFinalTax=liquidationTax(b,deduction,cgRate);
     finGross[s]=totalValue(p);finNet[s]=Math.max(0,finGross[s]-finalTax);
     benchFinGross[s]=totalValue(b);benchFinNet[s]=Math.max(0,benchFinGross[s]-benchFinalTax);
-    twr[s]=Math.pow(Math.max(0,p.index),12/months)-1;mdd[s]=p.mdd;
-    benchTwr[s]=Math.pow(Math.max(0,b.index),12/months)-1;benchMdd[s]=b.mdd;
+    twr[s]=Math.pow(Math.max(0,p.index),12/months)-1;mdd[s]=p.mdd;mddAt[s]=p.mddDay;
+    benchTwr[s]=Math.pow(Math.max(0,b.index),12/months)-1;benchMdd[s]=b.mdd;benchMddAt[s]=b.mddDay;
     taxTotal[s]=p.taxPaid+finalTax;benchTaxTotal[s]=b.taxPaid+benchFinalTax;cash[s]=p.cash;
-    for(let i=0;i<3;i++){assetVals[s*3+i]=p.h[i];assetBasis[s*3+i]=p.basis[i]}
+    for(let i=0;i<3;i++){assetVals[s*3+i]=p.h[i];assetBasis[s*3+i]=p.basis[i];dividendReinvested[s*3+i]=p.divReinvested[i]}
     if(s%Math.max(1,Math.floor(N/40))===0)self.postMessage({type:'progress',value:(s+1)/N})
   }
-  const result={N,months,yearsCount,investedTotal,inflation,W,paths,benchPaths,finGross,finNet,benchFinGross,benchFinNet,twr,mdd,benchTwr,benchMdd,taxTotal,benchTaxTotal,cash,assetVals,assetBasis,annualDivs,contrib,reinvest:cfg.reinvest,rebal:cfg.rebal,fxOn:cfg.fxOn};
+  const result={N,months,yearsCount,investedTotal,startValue,startBasis,inflation,W,paths,benchPaths,finGross,finNet,benchFinGross,benchFinNet,twr,mdd,mddAt,benchTwr,benchMdd,benchMddAt,taxTotal,benchTaxTotal,cash,assetVals,assetBasis,dividendReinvested,annualDivs,contrib,switchMonths,switchDividends,annualInvestments,policy,jepqDestination,reinvest:cfg.reinvest,rebal:cfg.rebal,fxOn:cfg.fxOn};
   const transfer=[];for(const value of Object.values(result))if(ArrayBuffer.isView(value))transfer.push(value.buffer);
   self.postMessage({type:'done',result},transfer)
 }
@@ -604,30 +848,69 @@ const fmtMoney=value=>{if(!Number.isFinite(value))return '—';const a=Math.abs(
 const fmtWon=value=>Number.isFinite(value)?Math.round(value*10000).toLocaleString('ko-KR')+'원':'—';
 const fmtPct=value=>Number.isFinite(value)?(value*100).toFixed(1)+'%':'—';
 const fmtSignedMoney=value=>!Number.isFinite(value)?'—':(value>=0?'+':'−')+fmtMoney(Math.abs(value));
+const fmtMonth=month=>{if(!(month>0))return '기간 내 미도달';const y=Math.floor(month/12),m=month%12;return [y?y+'년':'',m?m+'개월':''].filter(Boolean).join(' ')};
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let activeWorker=null,lastResult=null,lastConfig=null,pathChart=null,cashChart=null,viewMode='nominal',scenarioIndexMap=null;
+const marketPresets={
+  balanced:{muQ:13,volQ:23,muS:9,volS:16,borrow:3.5},
+  conservative:{muQ:11,volQ:22,muS:9,volS:16,borrow:4},
+  historical:{muQ:16,volQ:22.9,muS:11,volS:20.1,borrow:3.5}
+};
+let activeWorker=null,lastResult=null,lastConfig=null,pathChart=null,cashChart=null,viewMode='nominal',scenarioIndexMap=null,allocationWorkers=[],allocationRunId=0;
+
+function updateQldGrowthHint(){
+  const mu=number('muQ')/100,vol=number('volQ')/100,fee=number('feeQ')/100,financing=number('borrow')/100;
+  const approx=Math.expm1(2*Math.log1p(mu)-2*vol*vol-fee-financing);
+  $('qldGrowthHint').textContent=Number.isFinite(approx)?`현재 가정의 QLD 장기 중앙 성장 근사치는 연 ${(approx*100).toFixed(1)}%입니다.`:'QLD 장기 중앙 성장 근사치를 계산하려면 가정을 확인해 주세요.'
+}
+function applyMarketPreset(name){
+  const preset=marketPresets[name];if(!preset)return;
+  for(const [id,value] of Object.entries(preset))$(id).value=String(value);
+  updateQldGrowthHint();setDirty()
+}
+function pathRankLabel(p){
+  if(p===.5)return '중앙';
+  return p>.5?`상위 ${Math.round((1-p)*100)}%`:`하위 ${Math.round(p*100)}%`
+}
+function updateStressControls(){
+  const months=Math.max(12,Math.round((number('years')||1)*12)),slider=$('stressMonth');slider.max=String(months);
+  if(Number(slider.value)>months)slider.value=String(months);
+  $('stressMonthValue').textContent=fmtMonth(Number(slider.value));
+  const drop=Number($('stressDrop').value);$('stressDropValue').textContent=drop>0?`−${drop}%`:'폭락 없음'
+}
 
 function getConfig(){
+  const currentHoldings=['holdingVOO','holdingQLD','holdingJEPQ'].map(number),currentBasis=['basisVOO','basisQLD','basisJEPQ'].map((id,i)=>$(id).value.trim()===''?currentHoldings[i]:number(id));
   return {
-    monthly:number('monthly'),initial:number('initial'),years:number('years'),growth:number('growth'),inflation:number('inflation'),
-    weights:[number('wVOO'),number('wQLD'),number('wJEPQ')],reinvest:$('reinvest').value==='1',rebal:$('rebal').value==='1',sims:Number($('sims').value),fxOn:$('fxOn').checked,
+    currentHoldings,currentBasis,
+    monthly:number('monthly'),initial:number('initial'),years:number('years'),growth:number('growth'),inflation:number('inflation'),marketPreset:$('marketPreset').value,stressMonth:number('stressMonth'),stressDrop:number('stressDrop'),
+    weights:[number('wVOO'),number('wQLD'),number('wJEPQ')],reinvest:$('reinvest').value==='1',jepqDividendDestination:$('jepqDividendDestination').value,rebal:$('rebal').value==='1',sims:Number($('sims').value),fxOn:$('fxOn').checked,
+    strategyMode:$('strategyMode').value,dividendTarget:number('dividendTarget'),switchAfterMonths:number('switchAfterMonths'),postWeights:[number('postVOO'),number('postQLD')],postJepqDividend:$('postJepqDividend').value,
     muQ:number('muQ'),volQ:number('volQ'),muS:number('muS'),volS:number('volS'),rho:number('rho'),divV:number('divV'),feeV:number('feeV'),divQ:number('divQ'),feeQ:number('feeQ'),borrow:number('borrow'),
-    divJ:number('divJ'),feeJ:number('feeJ'),betaJ:number('betaJ'),capJ:number('capJ'),alphaJ:number('alphaJ'),fxMu:number('fxMu'),fxVol:number('fxVol'),fxCorr:number('fxCorr'),
+    divJ:number('divJ'),feeJ:number('feeJ'),betaJ:number('betaJ'),alphaJ:number('alphaJ'),fxMu:number('fxMu'),fxVol:number('fxVol'),fxCorr:number('fxCorr'),
     whTax:number('whTax'),cgTax:number('cgTax'),deduction:number('deduction'),seed:$('seed').value.trim()
   }
 }
 function validate(cfg){
   const errors=[];
   form.querySelectorAll('input').forEach(el=>el.removeAttribute('aria-invalid'));
-  const finiteIds=['monthly','initial','years','growth','inflation','wVOO','wQLD','wJEPQ','muQ','volQ','muS','volS','rho','divV','feeV','divQ','feeQ','borrow','divJ','feeJ','betaJ','capJ','alphaJ','fxMu','fxVol','fxCorr','whTax','cgTax','deduction'];
+  const finiteIds=['monthly','initial','years','growth','inflation','wVOO','wQLD','wJEPQ','muQ','volQ','muS','volS','rho','divV','feeV','divQ','feeQ','borrow','divJ','feeJ','betaJ','alphaJ','fxMu','fxVol','fxCorr','whTax','cgTax','deduction'];
   for(const id of finiteIds)if(!Number.isFinite(number(id))){errors.push('모든 숫자 입력칸을 채워 주세요.');$(id).setAttribute('aria-invalid','true')}
   const bad=(id,condition,message)=>{if(condition){errors.push(message);$(id).setAttribute('aria-invalid','true')}};
-  bad('monthly',cfg.monthly<0,'매달 투자금은 0 이상이어야 합니다.');bad('initial',cfg.initial<0,'지금 넣을 금액은 0 이상이어야 합니다.');
-  if(cfg.monthly===0&&cfg.initial===0)errors.push('투자금은 하나 이상 입력해 주세요.');
+  bad('monthly',cfg.monthly<0,'매달 투자금은 0 이상이어야 합니다.');bad('initial',cfg.initial<0,'지금 추가 투자금은 0 이상이어야 합니다.');
+  cfg.currentHoldings.forEach((v,i)=>bad(['holdingVOO','holdingQLD','holdingJEPQ'][i],!Number.isFinite(v)||v<0,'현재 보유 ETF의 평가액은 0 이상의 숫자로 입력해 주세요.'));
+  cfg.currentBasis.forEach((v,i)=>{
+    const id=['basisVOO','basisQLD','basisJEPQ'][i];
+    bad(id,!Number.isFinite(v)||v<0,'취득원가는 0 이상의 숫자로 입력하거나 비워 두세요.');
+    bad(id,cfg.currentHoldings[i]===0&&v>0,'보유 평가액이 없는 ETF의 취득원가는 비워 두거나 0으로 입력해 주세요.');
+  });
+  if(!Number.isFinite(cfg.currentHoldings.reduce((a,b)=>a+b,0)+cfg.initial)||!Number.isFinite(cfg.currentBasis.reduce((a,b)=>a+b,0)+cfg.initial))errors.push('초기 자산의 금액 범위를 확인해 주세요.');
+  if(cfg.monthly===0&&cfg.initial===0&&cfg.currentHoldings.every(v=>v===0))errors.push('현재 보유 ETF 또는 새 투자금을 하나 이상 입력해 주세요.');
   bad('years',!Number.isInteger(cfg.years)||cfg.years<1||cfg.years>40,'투자 기간은 1~40년의 정수로 입력해 주세요.');
   bad('growth',cfg.growth<=-100||cfg.growth>100,'투자금 인상률은 -100%보다 크고 100% 이하여야 합니다.');
   bad('inflation',cfg.inflation<=-100||cfg.inflation>50,'물가상승률은 -100%보다 크고 50% 이하여야 합니다.');
+  bad('stressMonth',!Number.isInteger(cfg.stressMonth)||cfg.stressMonth<1||cfg.stressMonth>cfg.years*12,'폭락 시점은 투자 기간 안에서 선택해 주세요.');
+  bad('stressDrop',cfg.stressDrop<0||cfg.stressDrop>80,'추가 시장 폭락률은 0~80%로 선택해 주세요.');
   cfg.weights.forEach((w,i)=>bad(['wVOO','wQLD','wJEPQ'][i],w<0,'ETF 비중은 0 이상이어야 합니다.'));
   if(cfg.weights.reduce((a,b)=>a+b,0)<=0)errors.push('ETF 비중 합계는 0보다 커야 합니다.');
   bad('muQ',cfg.muQ<=-100||cfg.muQ>100,'나스닥 기대수익률 범위를 확인해 주세요.');bad('muS',cfg.muS<=-100||cfg.muS>100,'S&P500 기대수익률 범위를 확인해 주세요.');
@@ -635,9 +918,16 @@ function validate(cfg){
   bad('rho',Math.abs(cfg.rho)>1,'지수 상관계수는 -1~1이어야 합니다.');bad('fxCorr',Math.abs(cfg.fxCorr)>1,'환율 상관계수는 -1~1이어야 합니다.');
   bad('fxMu',cfg.fxMu<=-100||cfg.fxMu>100,'환율 기대 변화율 범위를 확인해 주세요.');bad('fxVol',cfg.fxVol<0||cfg.fxVol>100,'환율 변동성은 0~100%로 입력해 주세요.');
   for(const id of ['divV','divQ','divJ','feeV','feeQ','feeJ','borrow'])bad(id,number(id)<0||number(id)>100,'분배율과 비용은 0~100%로 입력해 주세요.');
-  bad('betaJ',cfg.betaJ<0||cfg.betaJ>2,'JEPQ 베타는 0~2로 입력해 주세요.');bad('capJ',cfg.capJ<0||cfg.capJ>100,'JEPQ 상승 상한을 확인해 주세요.');
+  bad('betaJ',cfg.betaJ<0||cfg.betaJ>2,'JEPQ 베타는 0~2로 입력해 주세요.');
   bad('alphaJ',cfg.alphaJ<=-100||cfg.alphaJ>100,'옵션 프리미엄 순효과 범위를 확인해 주세요.');
   bad('whTax',cfg.whTax<0||cfg.whTax>100,'원천징수율은 0~100%여야 합니다.');bad('cgTax',cfg.cgTax<0||cfg.cgTax>100,'양도세율은 0~100%여야 합니다.');bad('deduction',cfg.deduction<0,'기본공제는 0 이상이어야 합니다.');
+  if(cfg.jepqDividendDestination==='split'&&cfg.weights[0]+cfg.weights[1]<=0)errors.push('JEPQ 배당을 나눠 투자하려면 VOO 또는 QLD 신규 투자 비중이 필요합니다.');
+  if(cfg.strategyMode!=='none'){
+    if(cfg.strategyMode==='dividend')bad('dividendTarget',!Number.isFinite(cfg.dividendTarget)||cfg.dividendTarget<=0,'JEPQ 월 세후배당 목표는 0보다 크게 입력해 주세요.');
+    if(cfg.strategyMode==='month')bad('switchAfterMonths',!Number.isInteger(cfg.switchAfterMonths)||cfg.switchAfterMonths<1||cfg.switchAfterMonths>480,'전환 시점은 1~480개월의 정수로 입력해 주세요.');
+    cfg.postWeights.forEach((w,i)=>bad(['postVOO','postQLD'][i],!Number.isFinite(w)||w<0,'전환 후 비중은 0 이상의 숫자로 입력해 주세요.'));
+    if(cfg.postWeights.reduce((a,b)=>a+b,0)<=0)errors.push('전환 후 VOO·QLD 비중을 하나 이상 입력해 주세요.');
+  }
   if(!cfg.seed)errors.push('난수 시드를 입력해 주세요.');
   return [...new Set(errors)]
 }
@@ -649,9 +939,29 @@ function updateAllocation(){
   if(sum===100){msg.className='allocation-status ok';msg.textContent='✓ 합계 100%'}
   else if(sum>0){msg.className='allocation-status warn';msg.textContent=`입력 합계 ${sum.toFixed(1)}% · 실제 계산은 ${vals.map(x=>(x/sum*100).toFixed(1)+'%').join(' · ')}로 환산`}
   else{msg.className='allocation-status warn';msg.textContent='비중을 하나 이상 입력해 주세요.'}
+  updateHoldingsSummary();updateStrategyControls()
+}
+function updateHoldingsSummary(){
+  const values=['holdingVOO','holdingQLD','holdingJEPQ'].map(number),total=values.reduce((a,b)=>a+b,0);
+  $('holdingsSummary').textContent=values.some(v=>!Number.isFinite(v)||v<0)||!Number.isFinite(total)?'각 ETF의 현재 평가액을 확인해 주세요.':total>0?`현재 보유 합계 ${fmtMoney(total)} · VOO ${fmtPct(values[0]/total)} / QLD ${fmtPct(values[1]/total)} / JEPQ ${fmtPct(values[2]/total)}`:'현재 보유 ETF가 없다면 0으로 두고 아래 투자 계획만 입력하세요.'
+}
+function updateStrategyControls(){
+  const mode=$('strategyMode').value,enabled=mode!=='none';
+  $('strategyControls').hidden=!enabled;
+  $('dividendTriggerField').hidden=mode!=='dividend';$('dividendTarget').disabled=mode!=='dividend';
+  $('monthTriggerField').hidden=mode!=='month';$('switchAfterMonths').disabled=mode!=='month';
+  for(const id of ['postVOO','postQLD','postJepqDividend'])$(id).disabled=!enabled;
+  const weights=[number('postVOO'),number('postQLD')],sum=weights[0]+weights[1],valid=weights.every(w=>Number.isFinite(w)&&w>=0)&&sum>0;
+  $('postAllocation').textContent=valid?`실제 배분 VOO ${(weights[0]/sum*100).toFixed(1)}% · QLD ${(weights[1]/sum*100).toFixed(1)}% · JEPQ 0%`:'VOO·QLD 비중을 하나 이상 입력해 주세요.';
+  if(mode==='dividend')$('triggerHelp').textContent='각 경로의 해당 월 원천징수 후 JEPQ 배당으로 판단합니다. 달성 다음 달부터 새 투자금 배분이 바뀝니다. 목표는 미래 시점의 명목 원화 금액입니다.';
+  if(mode==='month'){
+    const month=number('switchAfterMonths'),beyond=month>number('years')*12;
+    $('triggerHelp').textContent=beyond?'지정한 시점이 투자 기간보다 뒤라서 이번 계산에서는 전환되지 않습니다.':`투자 시작 후 ${fmtMonth(month)} 말에 전환합니다. 새 투자금은 다음 달부터, JEPQ 배당은 전환 월부터 바뀐 방식을 적용합니다.`;
+  }
 }
 function setDirty(){
   updateAllocation();
+  if(allocationWorkers.length||$('allocationCompareTable').innerHTML)cancelAllocationComparison(true);
   if(activeWorker)cancelRun('설정이 바뀌어 계산을 멈췄습니다.');
   if(lastResult){document.body.classList.add('stale');$('statusBadge').className='status-badge stale';$('statusBadge').textContent='재계산 필요';$('run').textContent='변경한 설정으로 다시 계산';$('mobileRun').textContent='변경한 설정으로 다시 계산'}
 }
@@ -664,7 +974,7 @@ function setRunning(on){
 function cancelRun(message='계산을 취소했습니다.'){
   if(activeWorker){activeWorker.terminate();activeWorker=null}setRunning(false);$('statusBadge').className='status-badge stale';$('statusBadge').textContent=message;document.body.classList.add('stale')
 }
-function runSimulation({initial=false}={}){
+function runSimulation({initial=false,scroll=true}={}){
   const cfg=getConfig(),errors=validate(cfg),box=$('formError');
   if(errors.length){box.textContent=errors[0];box.classList.add('show');setRunning(false);return}
   box.classList.remove('show');box.textContent='';
@@ -677,7 +987,8 @@ function runSimulation({initial=false}={}){
     if(msg.type==='done'){
       activeWorker=null;worker.terminate();lastResult=msg.result;lastConfig=cfg;document.body.classList.remove('stale');setRunning(false);renderAll();
       $('statusBadge').className='status-badge';$('statusBadge').textContent='계산 완료';$('results').setAttribute('aria-busy','false');
-      if(!initial){$('results').focus({preventScroll:true});$('results').scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'start'})}
+      if(!initial&&scroll&&mobileQuery.matches)setMobileTab('results',false);
+      if(!initial&&scroll){$('results').focus({preventScroll:true});$('results').scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'start'})}
     }
     if(msg.type==='error'){activeWorker=null;worker.terminate();setRunning(false);box.textContent='계산 중 문제가 생겼습니다. 입력 범위를 확인하고 다시 실행해 주세요.';box.classList.add('show');$('statusBadge').className='status-badge stale';$('statusBadge').textContent='계산 오류'}
   };
@@ -693,9 +1004,15 @@ function renderAll(){
   const r=lastResult,c=lastConfig;scenarioIndexMap=sortedScenarioIndices(r);
   const low=indexAt(.1),mid=indexAt(.5),high=indexAt(.9),weights=r.W.map(x=>(x*100).toFixed(0));
   $('resultTitle').textContent=`${c.years}년 뒤 세후 자산 전망`;
-  $('conditionSummary').textContent=`월 ${fmtMoney(c.monthly)} · VOO ${weights[0]} / QLD ${weights[1]} / JEPQ ${weights[2]} · 배당 ${c.reinvest?'재투자':'현금 보관'} · ${c.fxOn?'환율 반영':'환율 고정'}`;
+  const strategySummary=r.policy.mode==='none'?'비중 유지':r.policy.mode==='dividend'?`JEPQ 월 세후 ${fmtMoney(c.dividendTarget)} 달성 후 전환`:`${fmtMonth(c.switchAfterMonths)} 후 전환`;
+  const marketLabel={balanced:'균형 시장가정',conservative:'보수적 시장가정',historical:'역사 참고 시장가정',custom:'직접 입력 시장가정'}[c.marketPreset]||'직접 입력 시장가정';
+  const stressLabel=c.stressDrop>0?`${fmtMonth(c.stressMonth)}에 지수 추가 −${c.stressDrop}%`:'강제 폭락 없음';
+  const currentTotal=c.currentHoldings.reduce((a,b)=>a+b,0);
+  $('conditionSummary').textContent=`현재 보유 ${fmtMoney(currentTotal)} + 지금 추가 ${fmtMoney(c.initial)} · 월 ${fmtMoney(c.monthly)} · 신규 투자 비중 VOO ${weights[0]} / QLD ${weights[1]} / JEPQ ${weights[2]} · ${strategySummary} · ${marketLabel} · ${stressLabel} · ${c.fxOn?'환율 반영':'환율 고정'}`;
   $('heroLabel').textContent=viewMode==='real'?'일괄 매도 후 예상 자산 · 오늘 가치':'일괄 매도 후 예상 자산 중앙값';
   $('mainValue').textContent=fmtMoney(displayEnd(r.finNet[mid]));
+  $('mainMultiple').textContent=`명목 원금 대비 ${(r.finNet[mid]/r.investedTotal).toFixed(1)}배`;
+  $('mainMultiple').title='명목 세후 종료자산 ÷ 현재 평가액과 신규 투자금의 합계';
   $('mainSub').textContent=`세전 ${fmtMoney(displayEnd(r.finGross[mid]))} · 예상 누적 세금 ${fmtMoney(displayEnd(r.taxTotal[mid]))}`;
   $('rangeValue').textContent=`${fmtMoney(displayEnd(r.finNet[low]))} – ${fmtMoney(displayEnd(r.finNet[high]))}`;
   $('investedValue').textContent=fmtMoney(r.investedTotal);
@@ -706,13 +1023,82 @@ function renderAll(){
   else{$('altValueLabel').textContent='명목 자산 중앙값';$('altValue').textContent=fmtMoney(r.finNet[mid]);$('altValueNote').textContent='미래 시점의 원화 금액'}
   const diff=r.finNet[mid]-r.benchFinNet[mid];
   $('twrValue').textContent=fmtPct(r.twr[mid]);$('mddValue').textContent=fmtPct(r.mdd[mid]);$('taxValue').textContent=fmtMoney(displayEnd(r.taxTotal[mid]));$('diffValue').textContent=fmtSignedMoney(displayEnd(diff));$('diffValue').className=diff>=0?'positive':'negative';
-  renderComparison(mid);renderScenarioTable();renderAssetTable(mid);renderDividendTable();renderPathChart(low,mid,high);renderCashChart();
-  $('dividendModeChip').textContent=c.reinvest?'배당 재투자':'배당 현금 보관';
-  $('cashNote').textContent=c.reinvest?'표시된 배당은 원천징수 후 다시 매수되는 금액입니다. 실제 인출 현금은 아니지만 취득원가에는 포함됩니다.':'표시된 배당은 원천징수 후 현금으로 쌓이며 수익률 0%로 보관됩니다.'
+  const pathP=Number($('pathPercentile').value),pathIndex=indexAt(pathP);
+  renderStrategyResult(mid);renderComparison(mid);renderScenarioTable();renderAssetTable(mid);renderDividendTable();renderPathChart(low,pathIndex,high,pathP);renderCashChart();
+  $('dividendModeChip').textContent=`원천징수 ${c.whTax.toFixed(1)}% 반영`;
+  $('pathBasisChip').textContent=viewMode==='real'?'각 시점 전량 매도 후 · 오늘 가치':'각 시점 전량 매도 후 · 명목 원화';
+  const destinationLabel=value=>({self:'JEPQ에 재투자',voo:'VOO에 투자',qld:'QLD에 투자',split:'VOO·QLD에 분할 투자',cash:'현금 보관',redirect:'VOO·QLD에 분할 투자'}[value]||value);
+  const vooQldNote=c.reinvest?'VOO·QLD가 지급한 세후배당은 각각 같은 ETF에 재투자합니다.':'VOO·QLD가 지급한 세후배당은 현금으로 보관합니다.';
+  $('cashNote').textContent=`모든 배당 표시는 ${c.whTax.toFixed(1)}% 원천징수 후 금액입니다. ${vooQldNote} JEPQ 세후배당은 전환 전 ${destinationLabel(r.jepqDestination)}${r.policy.mode!=='none'?`, 전환 후 ${destinationLabel(r.policy.dividend)}`:''}합니다.`
+}
+function renderStrategyResult(i){
+  const r=lastResult,c=lastConfig,policy=r.policy,enabled=policy.mode!=='none';
+  $('strategyResult').hidden=!enabled;if(!enabled)return;
+  const isDividend=policy.mode==='dividend',hits=Array.from(r.switchMonths).filter(m=>m>0).sort((a,b)=>a-b),month=r.switchMonths[i],post=policy.weights.map(w=>(w*100).toFixed(1));
+  $('strategyResultTitle').textContent=isDividend?'JEPQ 배당 목표 후 투자 전환':'지정 시점 후 투자 전환';
+  $('strategyResultDescription').textContent=isDividend?`월 세후배당 ${fmtWon(c.dividendTarget)} 이상을 처음 지급한 달에 전환합니다. 목표는 명목 원화이며, 원천징수 외 추가 세금은 포함하지 않습니다.`:`${fmtMonth(c.switchAfterMonths)} 말에 전환하며, 새 투자금은 ${c.switchAfterMonths+1}개월차부터 바뀐 비중으로 배분합니다.`;
+  $('strategyBefore').textContent=`VOO ${(r.W[0]*100).toFixed(1)}% · QLD ${(r.W[1]*100).toFixed(1)}% · JEPQ ${(r.W[2]*100).toFixed(1)}%`;
+  $('strategyAfter').textContent=`VOO ${post[0]}% · QLD ${post[1]}% · JEPQ 0%`;
+  $('switchProbabilityLabel').textContent=isDividend?'기간 내 목표 도달 비율':'기간 내 전환 비율';
+  $('switchProbability').textContent=fmtPct(hits.length/r.N);
+  $('switchCount').textContent=`${r.N.toLocaleString('ko-KR')}개 경로 중 ${hits.length.toLocaleString('ko-KR')}개 · 가정에 따른 모의 결과`;
+  $('switchMedian').textContent=hits.length?fmtMonth(hits[Math.round((hits.length-1)*.5)]):'기간 내 미도달';
+  $('centralSwitch').textContent=fmtMonth(month);
+  $('centralSwitchNote').textContent=month>0?`전환 월 JEPQ 세후배당 ${fmtWon(r.switchDividends[i])} · 명목`:'이 경로는 시작 비중을 끝까지 유지했습니다.';
+  $('strategyOutcomeNote').textContent=month>0?(month===r.months?'중앙 결과는 마지막 달에 전환되어 이후 신규 납입금은 없습니다.':`중앙 결과는 ${month+1}개월차 신규 납입부터 전환 비중을 적용합니다.`):'중앙 결과는 조건을 충족하지 못해 전환되지 않았습니다.';
+  const postDividendLabel={split:'VOO·QLD에 전환 비중대로 배분',voo:'VOO에 투자',qld:'QLD에 투자',cash:'현금으로 보관',redirect:'VOO·QLD에 전환 비중대로 배분'}[policy.dividend];
+  $('strategyOutcomeNote').textContent+=` 기존 JEPQ는 매도하지 않고, 전환 월부터 JEPQ 배당은 ${postDividendLabel}합니다. 이후 배당이 목표보다 줄어도 되돌리지 않으며, 목표 배당의 지속을 보장하지 않습니다.`
+}
+function cancelAllocationComparison(showStale=false){
+  allocationRunId++;
+  for(const job of allocationWorkers)job.cancel();
+  allocationWorkers=[];$('allocationCompareRun').disabled=false;
+  if(showStale&&$('allocationCompareTable').innerHTML){$('allocationCompareStatus').className='compare-status';$('allocationCompareStatus').textContent='설정이 바뀌었습니다. 새 조건으로 비중 비교를 다시 실행해 주세요.'}
+}
+function runAllocationWorker(config,runId){
+  return new Promise((resolve,reject)=>{
+    const source=$('simulation-worker').textContent,blob=new Blob([source],{type:'text/javascript'}),url=URL.createObjectURL(blob),worker=new Worker(url);URL.revokeObjectURL(url);
+    let settled=false;const finish=(fn,value)=>{if(settled)return;settled=true;worker.terminate();fn(value)};
+    const job={worker,cancel:()=>finish(reject,new Error('comparison-cancelled'))};allocationWorkers.push(job);
+    worker.onmessage=e=>{const msg=e.data||{};if(msg.type==='done')finish(resolve,msg.result);if(msg.type==='error')finish(reject,new Error(msg.message||'comparison-error'))};
+    worker.onerror=()=>finish(reject,new Error('comparison-worker-error'));
+    if(runId!==allocationRunId)return job.cancel();worker.postMessage({type:'run',config})
+  })
+}
+function quantileOf(values,p){const sorted=Array.from(values).sort((a,b)=>a-b);return sorted[Math.round((sorted.length-1)*p)]}
+function allocationMetrics(result){
+  const endDividends=new Float64Array(result.N),lastYear=result.yearsCount-1;
+  for(let s=0;s<result.N;s++){const off=(s*result.yearsCount+lastYear)*3;endDividends[s]=(result.annualDivs[off]+result.annualDivs[off+1]+result.annualDivs[off+2])/12}
+  return {median:quantileOf(result.finNet,.5),p10:quantileOf(result.finNet,.1),p90:quantileOf(result.finNet,.9),twr:quantileOf(result.twr,.5),mdd:quantileOf(result.mdd,.5),monthlyDividend:quantileOf(endDividends,.5),loss:Array.from(result.finNet).filter(x=>x<result.investedTotal).length/result.N,invested:result.investedTotal}
+}
+async function runAllocationComparison(){
+  const cfg=getConfig(),errors=validate(cfg),custom=[number('compareVOO'),number('compareQLD'),number('compareJEPQ')];
+  if(errors.length){$('allocationCompareStatus').className='compare-status error';$('allocationCompareStatus').textContent=errors[0];return}
+  if(custom.some(x=>!Number.isFinite(x)||x<0)||custom.reduce((a,b)=>a+b,0)<=0){$('allocationCompareStatus').className='compare-status error';$('allocationCompareStatus').textContent='사용자안의 ETF 비중을 0 이상의 숫자로 입력하고 합계를 0보다 크게 해 주세요.';return}
+  cancelAllocationComparison();const runId=allocationRunId,simCount=Math.min(1000,cfg.sims),current=cfg.weights.slice();
+  const scenarios=[
+    {name:'현재 입력 비중',weights:current,current:true},{name:'사용자안',weights:custom},
+    {name:'VOO 100%',weights:[100,0,0]},{name:'QLD 100%',weights:[0,100,0]},
+    {name:'JEPQ 100%',weights:[0,0,100]},{name:'동일 비중',weights:[1,1,1]}
+  ];
+  $('allocationCompareRun').disabled=true;$('allocationInsight').className='allocation-insight';$('allocationCompareStatus').className='compare-status';$('allocationCompareStatus').textContent=`동일한 ${simCount.toLocaleString('ko-KR')}개 경로로 6개 비중을 계산하고 있습니다…`;
+  let completed=0;
+  try{
+    const results=await Promise.all(scenarios.map(s=>runAllocationWorker({...cfg,sims:simCount,weights:s.weights,strategyMode:'none',reinvest:true,jepqDividendDestination:'self'},runId).then(result=>{completed++;if(runId===allocationRunId)$('allocationCompareStatus').textContent=`비중 비교 계산 중 · ${completed}/6 완료`;return result})));
+    if(runId!==allocationRunId)return;
+    const baseline=results[0],rows=scenarios.map((scenario,i)=>{const metric=allocationMetrics(results[i]),sum=scenario.weights.reduce((a,b)=>a+b,0),weights=scenario.weights.map(x=>x/sum*100);metric.beat=i===0?null:Array.from(results[i].finNet).filter((x,j)=>x>baseline.finNet[j]).length/results[i].N;return {...scenario,...metric,weights}});
+    const bestMedian=Math.max(...rows.map(x=>x.median)),bestFloor=Math.max(...rows.map(x=>x.p10)),bestMdd=Math.max(...rows.map(x=>x.mdd)),bestDividend=Math.max(...rows.map(x=>x.monthlyDividend));
+    const ranked=rows.slice().sort((a,b)=>b.median-a.median);
+    $('allocationCompareTable').innerHTML='<thead><tr><th scope="col">구성</th><th scope="col">앞으로 투자 비중</th><th scope="col">세후 중앙</th><th scope="col">원금 대비</th><th scope="col">10~90% 범위</th><th scope="col">원금 미만 확률</th><th scope="col">TWR 중앙</th><th scope="col">MDD 중앙</th><th scope="col">마지막 연차 월배당</th><th scope="col">현재 입력 비중보다 많을 확률</th></tr></thead><tbody>'+ranked.map(r=>`<tr class="${r.current?'current-row':''}"><td>${r.name}</td><td>VOO ${r.weights[0].toFixed(0)} · QLD ${r.weights[1].toFixed(0)} · JEPQ ${r.weights[2].toFixed(0)}</td><td class="${r.median===bestMedian?'best-cell':''}">${fmtMoney(r.median)}</td><td>${(r.median/r.invested).toFixed(2)}배</td><td class="${r.p10===bestFloor?'best-cell':''}">${fmtMoney(r.p10)} – ${fmtMoney(r.p90)}</td><td>${fmtPct(r.loss)}</td><td>${fmtPct(r.twr)}</td><td class="${r.mdd===bestMdd?'best-cell':''}">${fmtPct(r.mdd)}</td><td class="${r.monthlyDividend===bestDividend?'best-cell':''}">${fmtWon(r.monthlyDividend)}</td><td>${r.beat===null?'기준':fmtPct(r.beat)}</td></tr>`).join('')+'</tbody>';
+    const medianWinner=rows.find(x=>x.median===bestMedian),floorWinner=rows.find(x=>x.p10===bestFloor),mddWinner=rows.find(x=>x.mdd===bestMdd),incomeWinner=rows.find(x=>x.monthlyDividend===bestDividend);
+    $('allocationInsight').textContent=`입력 가정에서는 중앙자산은 ${medianWinner.name} 조합, 10% 하단 방어는 ${floorWinner.name} 조합, MDD 방어는 ${mddWinner.name} 조합, 마지막 연차 배당은 ${incomeWinner.name} 조합이 각각 가장 높았습니다. 한 항목의 1위가 전체적으로 가장 낫다는 뜻은 아닙니다.`;$('allocationInsight').className='allocation-insight show';
+    $('allocationCompareStatus').className='compare-status success';$('allocationCompareStatus').textContent=`비교 완료 · 동일 난수 ${simCount.toLocaleString('ko-KR')}회 · 명목 세후 기준`;
+  }catch(error){for(const job of allocationWorkers)job.cancel();if(runId===allocationRunId&&error.message!=='comparison-cancelled'){$('allocationCompareStatus').className='compare-status error';$('allocationCompareStatus').textContent='비중 비교 계산 중 문제가 생겼습니다. 입력값을 확인하고 다시 실행해 주세요.'}}
+  finally{if(runId===allocationRunId){allocationWorkers=[];$('allocationCompareRun').disabled=false}}
 }
 function renderComparison(i){
   const r=lastResult,portfolio=displayEnd(r.finNet[i]),bench=displayEnd(r.benchFinNet[i]),diff=portfolio-bench;
-  $('compareTable').innerHTML=`<thead><tr><th scope="col">항목</th><th scope="col">현재 비중</th><th scope="col">VOO 100%</th></tr></thead><tbody>
+  $('compareTable').innerHTML=`<thead><tr><th scope="col">항목</th><th scope="col">현재 전략</th><th scope="col">VOO 100%</th></tr></thead><tbody>
     <tr><td>세후 종료자산</td><td class="emphasis">${fmtMoney(portfolio)}</td><td class="emphasis">${fmtMoney(bench)}</td></tr>
     <tr><td>연평균 TWR</td><td>${fmtPct(r.twr[i])}</td><td>${fmtPct(r.benchTwr[i])}</td></tr>
     <tr><td>최대 하락폭</td><td>${fmtPct(r.mdd[i])}</td><td>${fmtPct(r.benchMdd[i])}</td></tr>
@@ -721,34 +1107,49 @@ function renderComparison(i){
 }
 function renderScenarioTable(){
   const r=lastResult,rows=[['낮은 결과 10%',.1,'scenario-low'],['낮은 결과 25%',.25,''],['중앙 결과',.5,'scenario-mid'],['높은 결과 25%',.75,''],['높은 결과 10%',.9,'scenario-high']];
-  $('scenarioTable').innerHTML='<thead><tr><th scope="col">동일 경로</th><th scope="col">세후 종료자산</th><th scope="col">같은 경로 VOO</th><th scope="col">연평균 TWR</th><th scope="col">최대 하락폭</th><th scope="col">누적 양도세</th><th scope="col">VOO 대비</th></tr></thead><tbody>'+rows.map(([label,p,cls])=>{const i=indexAt(p),diff=r.finNet[i]-r.benchFinNet[i];return `<tr class="${cls}"><td>${label}</td><td>${fmtMoney(displayEnd(r.finNet[i]))}</td><td>${fmtMoney(displayEnd(r.benchFinNet[i]))}</td><td>${fmtPct(r.twr[i])}</td><td>${fmtPct(r.mdd[i])}</td><td>${fmtMoney(displayEnd(r.taxTotal[i]))}</td><td>${fmtSignedMoney(displayEnd(diff))}</td></tr>`}).join('')+'</tbody>'
+  const switching=r.policy.mode!=='none';
+  $('scenarioTable').innerHTML='<thead><tr><th scope="col">동일 경로</th><th scope="col">세후 종료자산</th><th scope="col">같은 경로 VOO</th><th scope="col">연평균 TWR</th><th scope="col">최대 하락폭</th><th scope="col">누적 양도세</th><th scope="col">VOO 대비</th>'+(switching?'<th scope="col">전환 시점</th>':'')+'</tr></thead><tbody>'+rows.map(([label,p,cls])=>{const i=indexAt(p),diff=r.finNet[i]-r.benchFinNet[i];return `<tr class="${cls}"><td>${label}</td><td>${fmtMoney(displayEnd(r.finNet[i]))}</td><td>${fmtMoney(displayEnd(r.benchFinNet[i]))}</td><td>${fmtPct(r.twr[i])}</td><td>${fmtPct(r.mdd[i])}</td><td>${fmtMoney(displayEnd(r.taxTotal[i]))}</td><td>${fmtSignedMoney(displayEnd(diff))}</td>${switching?`<td>${fmtMonth(r.switchMonths[i])}</td>`:''}</tr>`}).join('')+'</tbody>'
 }
 function renderAssetTable(i){
   const r=lastResult,names=['VOO','QLD','JEPQ'],colors=['var(--voo)','var(--qld)','var(--jepq)'];let total=r.cash[i];for(let a=0;a<3;a++)total+=r.assetVals[i*3+a];
-  let rows='';for(let a=0;a<3;a++){const value=r.assetVals[i*3+a],basis=r.assetBasis[i*3+a],gain=value-basis;rows+=`<tr><td><span class="asset-name"><span class="swatch" style="background:${colors[a]}"></span>${names[a]}</span></td><td>${fmtMoney(displayEnd(value))}</td><td>${fmtMoney(displayEnd(basis))}</td><td>${fmtSignedMoney(displayEnd(gain))}</td><td>${fmtPct(total?value/total:0)}</td></tr>`}
-  if(r.cash[i]>0)rows+=`<tr><td><span class="asset-name"><span class="swatch" style="background:var(--cash)"></span>현금 배당</span></td><td>${fmtMoney(displayEnd(r.cash[i]))}</td><td>—</td><td>—</td><td>${fmtPct(total?r.cash[i]/total:0)}</td></tr>`;
-  $('assetTable').innerHTML='<thead><tr><th scope="col">자산</th><th scope="col">세전 평가액</th><th scope="col">원화 취득원가</th><th scope="col">미실현 손익</th><th scope="col">비중</th></tr></thead><tbody>'+rows+'</tbody>'
+  let rows='';for(let a=0;a<3;a++){const value=r.assetVals[i*3+a],basis=r.assetBasis[i*3+a],reinvested=r.dividendReinvested[i*3+a],gain=value-basis;rows+=`<tr><td><span class="asset-name"><span class="swatch" style="background:${colors[a]}"></span>${names[a]}</span></td><td>${fmtMoney(displayEnd(value))}</td><td>${fmtMoney(displayEnd(basis))}</td><td>${fmtMoney(displayEnd(reinvested))}</td><td>${fmtSignedMoney(displayEnd(gain))}</td><td>${fmtPct(total?value/total:0)}</td></tr>`}
+  if(r.cash[i]>0)rows+=`<tr><td><span class="asset-name"><span class="swatch" style="background:var(--cash)"></span>현금 배당</span></td><td>${fmtMoney(displayEnd(r.cash[i]))}</td><td>—</td><td>—</td><td>—</td><td>${fmtPct(total?r.cash[i]/total:0)}</td></tr>`;
+  $('assetTable').innerHTML='<thead><tr><th scope="col">자산</th><th scope="col">양도세 전 평가액</th><th scope="col">원화 취득원가</th><th scope="col">누적 배당 재투자액</th><th scope="col">과세상 미실현 손익</th><th scope="col">비중</th></tr></thead><tbody>'+rows+'</tbody>'
 }
 function renderDividendTable(){
   if(!lastResult||!scenarioIndexMap)return;const r=lastResult,p=Number($('divScenario').value),i=indexAt(p);let rows='',cum=0;
-  for(let y=0;y<r.yearsCount;y++){const off=(i*r.yearsCount+y)*3,v=r.annualDivs[off],q=r.annualDivs[off+1],j=r.annualDivs[off+2],total=v+q+j;let contrib=0;for(let m=y*12;m<Math.min(r.months,(y+1)*12);m++)contrib+=r.contrib[m];const month=Math.min(r.months,(y+1)*12),scale=viewMode==='real'?deflatorAt(month):1;cum+=total/scale;rows+=`<tr><td>${y+1}년차</td><td>${fmtMoney(contrib)}</td><td>${fmtWon(j/scale)}</td><td>${fmtWon(v/scale)}</td><td>${fmtWon(q/scale)}</td><td>${fmtWon(total/scale)}</td><td>${fmtWon(total/12/scale)}</td><td>${fmtMoney(cum)}</td></tr>`}
-  $('divTable').innerHTML='<thead><tr><th scope="col">연차</th><th scope="col">연간 납입액</th><th scope="col">JEPQ</th><th scope="col">VOO</th><th scope="col">QLD</th><th scope="col">세후 배당 합계</th><th scope="col">월평균</th><th scope="col">누적 배당</th></tr></thead><tbody>'+rows+'</tbody>'
+  const switching=r.policy.mode!=='none',sw=r.switchMonths[i];
+  for(let y=0;y<r.yearsCount;y++){
+    const off=(i*r.yearsCount+y)*3,v=r.annualDivs[off],q=r.annualDivs[off+1],j=r.annualDivs[off+2],total=v+q+j;
+    let contrib=0;for(let m=y*12;m<Math.min(r.months,(y+1)*12);m++)contrib+=r.contrib[m];
+    const month=Math.min(r.months,(y+1)*12),scale=viewMode==='real'?deflatorAt(month):1;cum+=total/scale;
+    const phase=sw<0||sw>month?'전환 전':sw<=y*12?'전환 후':`${sw-y*12}개월차 말 전환`;
+    rows+=`<tr><td>${y+1}년차</td>${switching?`<td>${phase}</td>`:''}<td>${fmtMoney(contrib)}</td>${switching?`<td>${fmtMoney(r.annualInvestments[off+2])}</td>`:''}<td>${fmtWon(j/scale)}</td><td>${fmtWon(v/scale)}</td><td>${fmtWon(q/scale)}</td><td>${fmtWon(total/scale)}</td><td>${fmtWon(total/12/scale)}</td><td>${fmtMoney(cum)}</td></tr>`
+  }
+  $('divTable').innerHTML='<thead><tr><th scope="col">연차</th>'+(switching?'<th scope="col">전략 단계</th>':'')+'<th scope="col">연간 납입액</th>'+(switching?'<th scope="col">중 JEPQ 납입액</th>':'')+'<th scope="col">JEPQ 배당</th><th scope="col">VOO 배당</th><th scope="col">QLD 배당</th><th scope="col">세후 배당 합계</th><th scope="col">월평균</th><th scope="col">누적 배당</th></tr></thead><tbody>'+rows+'</tbody>'
 }
 function columnQuantiles(arr,cols,col,ps){const values=new Float64Array(lastResult.N);for(let s=0;s<lastResult.N;s++)values[s]=arr[s*cols+col];values.sort();return ps.map(p=>values[Math.round((values.length-1)*p)])}
 function chartOptions(yFormatter){return {responsive:true,maintainAspectRatio:false,animation:reducedMotion?false:{duration:250},interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',align:'end',labels:{color:css('--sub'),usePointStyle:true,boxWidth:8,boxHeight:8,padding:14}},tooltip:{backgroundColor:css('--ink'),titleColor:css('--bg'),bodyColor:css('--bg'),padding:11,callbacks:{label:ctx=>ctx.dataset.label+': '+yFormatter(ctx.parsed.y)}}},scales:{x:{ticks:{color:css('--muted'),maxTicksLimit:10},grid:{display:false}},y:{ticks:{color:css('--muted'),callback:yFormatter},grid:{color:css('--line')}}}}}
-function renderPathChart(low,mid,high){
-  const r=lastResult,cols=r.months+1,step=Math.max(1,Math.ceil(r.months/120)),labels=[],p10=[],p50=[],p90=[],bench=[],paid=[];let cum=lastConfig.initial;
-  for(let m=0;m<=r.months;m++){if(m>0)cum+=r.contrib[m-1];if(m%step&&m!==r.months)continue;const qs=columnQuantiles(r.paths,cols,m,[.1,.5,.9]),bq=columnQuantiles(r.benchPaths,cols,m,[.5])[0];labels.push((m/12).toFixed(m%12?1:0)+'년');p10.push(displayAt(qs[0],m));p50.push(displayAt(qs[1],m));p90.push(displayAt(qs[2],m));bench.push(displayAt(bq,m));paid.push(displayAt(cum,m))}
+function renderPathChart(low,selected,high,percentile){
+  const r=lastResult,cols=r.months+1,step=Math.max(1,Math.ceil(r.months/120)),p10=[],p50=[],p90=[],bench=[],paid=[];let cum=r.startValue;
+  for(let m=0;m<=r.months;m++){if(m>0)cum+=r.contrib[m-1];if(m%step&&m!==r.months)continue;const x=m/12,qs=columnQuantiles(r.paths,cols,m,[.1,.9]);p10.push({x,y:displayAt(qs[0],m)});p50.push({x,y:displayAt(r.paths[selected*cols+m],m)});p90.push({x,y:displayAt(qs[1],m)});bench.push({x,y:displayAt(r.benchPaths[selected*cols+m],m)});paid.push({x,y:displayAt(cum,m)})}
   if(typeof Chart==='undefined'){$('pathChart').style.display='none';$('pathFallback').style.display='grid';return}
   $('pathFallback').style.display='none';$('pathChart').style.display='block';if(pathChart)pathChart.destroy();
-  pathChart=new Chart($('pathChart'),{type:'line',data:{labels,datasets:[
-    {label:'80% 범위',data:p90,borderColor:'transparent',backgroundColor:'rgba(33,85,217,.13)',pointRadius:0,fill:false},
+  const base=chartOptions(fmtMoney),tickStep=r.years<=10?1:r.years<=20?2:r.years<=30?3:5,rank=pathRankLabel(percentile);
+  pathChart=new Chart($('pathChart'),{type:'line',data:{datasets:[
+    {label:'현재 전략 예상 범위 (10~90%)',data:p90,borderColor:'transparent',backgroundColor:'rgba(33,85,217,.13)',pointRadius:0,fill:false},
     {label:'하단 경계',data:p10,borderColor:'transparent',backgroundColor:'rgba(33,85,217,.13)',pointRadius:0,fill:'-1'},
-    {label:'현재 비중 중앙값',data:p50,borderColor:css('--primary'),borderWidth:2.7,pointRadius:0,tension:.16},
-    {label:'VOO 100% 중앙값',data:bench,borderColor:css('--voo'),borderWidth:1.8,borderDash:[7,4],pointRadius:0,tension:.16},
-    {label:'누적 납입액',data:paid,borderColor:css('--muted'),borderWidth:1.3,borderDash:[3,4],pointRadius:0}
-  ]},options:{...chartOptions(fmtMoney),plugins:{...chartOptions(fmtMoney).plugins,legend:{...chartOptions(fmtMoney).plugins.legend,labels:{...chartOptions(fmtMoney).plugins.legend.labels,filter:item=>item.text!=='하단 경계'}}}}});
-  $('pathSummary').textContent=`${lastConfig.years}년 후 세후 중앙값 ${fmtMoney(displayEnd(r.finNet[mid]))}, 낮은 결과 10% ${fmtMoney(displayEnd(r.finNet[low]))}, 높은 결과 10% ${fmtMoney(displayEnd(r.finNet[high]))}.`
+    {label:`현재 전략 · ${rank} 종료경로`,data:p50,borderColor:css('--primary'),borderWidth:3.2,pointRadius:ctx=>ctx.dataIndex===ctx.dataset.data.length-1?4:0,pointHoverRadius:5,tension:.08,order:1},
+    {label:'같은 경로의 VOO 100%',data:bench,borderColor:css('--voo'),borderWidth:1.8,borderDash:[7,4],pointRadius:0,tension:.08},
+    {label:'누적 투자원금',data:paid,borderColor:css('--principal'),backgroundColor:css('--principal'),borderWidth:2.5,borderDash:[3,3],pointRadius:ctx=>ctx.dataIndex===ctx.dataset.data.length-1?4:0,pointHoverRadius:5,order:2}
+  ]},options:{...base,plugins:{...base.plugins,legend:{...base.plugins.legend,labels:{...base.plugins.legend.labels,filter:item=>item.text!=='하단 경계'}},tooltip:{...base.plugins.tooltip,callbacks:{...base.plugins.tooltip.callbacks,title:items=>`${Number(items[0].parsed.x.toFixed(1))}년차`}}},scales:{x:{type:'linear',min:0,max:r.years,title:{display:true,text:'투자 경과 (년)',color:css('--muted')},ticks:{color:css('--muted'),stepSize:tickStep,callback:value=>`${value}년`},grid:{display:false}},y:{...base.scales.y,title:{display:true,text:viewMode==='real'?'세후 자산 · 오늘 가치':'세후 자산 · 명목 원화',color:css('--muted')}}}}});
+  const principal=displayEnd(r.investedTotal),outcome=displayEnd(r.finNet[selected]),delta=outcome-principal,multiple=principal>0?outcome/principal:0;
+  $('pathDescription').textContent=`파란 영역은 각 시점 결과의 가운데 80%(10~90백분위)입니다. 실선은 최종 세후자산 ${rank} 실제 경로이며, 점선은 같은 시장·환율 경로의 VOO 100%입니다.`;
+  $('pathPrincipalValue').textContent=fmtMoney(principal);$('pathOutcomeLabel').textContent=`${rank} 경로 종료자산`;$('pathOutcomeValue').textContent=fmtMoney(outcome);
+  $('pathOutcomeDelta').textContent=`투자원금 대비 ${multiple.toFixed(2)}배 · ${fmtSignedMoney(delta)}`;$('pathOutcomeDelta').className=delta>=0?'positive':'negative';
+  const shock=lastConfig.stressDrop>0?` ${fmtMonth(lastConfig.stressMonth)}에 지수 추가 −${lastConfig.stressDrop}% 폭락을 반영했습니다.`:' 강제 폭락은 적용하지 않았습니다.';
+  const actualMddMonth=Math.max(1,Math.ceil(r.mddAt[selected]/21));
+  $('pathSummary').textContent=`${rank} 실제 경로의 ${lastConfig.years}년 후 세후자산은 ${fmtMoney(outcome)}, 투자 중 MDD는 ${fmtMonth(actualMddMonth)}에 기록한 ${fmtPct(r.mdd[selected])}입니다.${shock} 참고 범위: 10백분위 ${fmtMoney(displayEnd(r.finNet[low]))} · 90백분위 ${fmtMoney(displayEnd(r.finNet[high]))}.`
 }
 function annualDividendQuantiles(year){const r=lastResult,values=new Float64Array(r.N);for(let s=0;s<r.N;s++){const off=(s*r.yearsCount+year)*3;values[s]=(r.annualDivs[off]+r.annualDivs[off+1]+r.annualDivs[off+2])/12}values.sort();return [.1,.5,.9].map(p=>values[Math.round((values.length-1)*p)])}
 function renderCashChart(){
@@ -763,13 +1164,28 @@ function renderCashChart(){
 }
 
 form.addEventListener('submit',e=>{e.preventDefault();runSimulation()});
-form.addEventListener('input',setDirty);form.addEventListener('change',setDirty);
+form.addEventListener('input',e=>{if(['muQ','volQ','muS','volS','borrow'].includes(e.target.id))$('marketPreset').value='custom';if(e.target.id==='years')updateStressControls();updateQldGrowthHint();setDirty()});form.addEventListener('change',setDirty);
+$('marketPreset').addEventListener('change',e=>applyMarketPreset(e.target.value));
+$('pathPercentile').addEventListener('change',()=>{if(lastResult)renderAll()});
+for(const id of ['stressMonth','stressDrop']){$(id).addEventListener('input',updateStressControls);$(id).addEventListener('change',()=>{setDirty();runSimulation({scroll:false})})}
+$('allocationCompareRun').addEventListener('click',runAllocationComparison);
+for(const id of ['compareVOO','compareQLD','compareJEPQ'])$(id).addEventListener('input',()=>{if($('allocationCompareTable').innerHTML){$('allocationCompareStatus').className='compare-status';$('allocationCompareStatus').textContent='사용자안 비중이 바뀌었습니다. 비교를 다시 실행해 주세요.'}});
+const mobileQuery=matchMedia('(max-width:900px)');
+function setMobileTab(tab,toTop=true){
+  document.body.classList.toggle('m-inputs',tab==='inputs');document.body.classList.toggle('m-results',tab==='results');
+  $('tabInputs').setAttribute('aria-selected',String(tab==='inputs'));$('tabResults').setAttribute('aria-selected',String(tab==='results'));
+  if(tab==='results')requestAnimationFrame(()=>Object.values(Chart.instances||{}).forEach(c=>c.resize()));
+  if(toTop)window.scrollTo({top:0,behavior:'auto'});
+}
+$('tabInputs').addEventListener('click',()=>setMobileTab('inputs'));$('tabResults').addEventListener('click',()=>setMobileTab('results'));
+setMobileTab('inputs',false);
+if(typeof navigator!=='undefined'&&'serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 $('cancel').addEventListener('click',()=>cancelRun());$('mobileRun').addEventListener('click',()=>runSimulation());
 $('newSeed').addEventListener('click',()=>{$('seed').value=String(crypto.getRandomValues(new Uint32Array(1))[0]);setDirty()});
-$('resetDefaults').addEventListener('click',()=>{form.reset();updateAllocation();setDirty()});
+$('resetDefaults').addEventListener('click',()=>{form.reset();$('pathPercentile').value='0.5';$('stressMonth').value='90';$('stressDrop').value='0';$('compareVOO').value='60';$('compareQLD').value='20';$('compareJEPQ').value='20';updateAllocation();updateQldGrowthHint();updateStressControls();setDirty()});
 $('divScenario').addEventListener('change',renderDividendTable);
 document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{viewMode=button.dataset.view;document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b===button));if(lastResult)renderAll()}));
-updateAllocation();runSimulation({initial:true});
+updateAllocation();updateQldGrowthHint();updateStressControls();runSimulation({initial:true});
 </script>
 </body>
 </html>
