@@ -52,9 +52,32 @@ const base = {
   seed: 'test-seed',
 };
 
+// The engine takes a list of ETFs. Most fixtures below keep the original three-slot shape
+// (S&P 500 fund, 2x Nasdaq fund, Nasdaq covered call) and are converted here.
+function toEngineConfig(cfg) {
+  const { weights, currentHoldings, currentBasis, postWeights, jepqDividendDestination, postJepqDividend,
+    divV, feeV, divQ, feeQ, divJ, feeJ, betaJ, alphaJ, ...rest } = cfg;
+  const held = currentHoldings ?? [0, 0, 0];
+  const cost = currentBasis ?? held;
+  const post = postWeights ?? [70, 30];
+  const destination = value => ({ voo: 0, qld: 1, redirect: 'split' })[value] ?? value;
+  return {
+    ...rest,
+    benchFee: feeV,
+    benchDiv: divV,
+    ccDividend: destination(jepqDividendDestination ?? (cfg.reinvest ? 'self' : 'cash')),
+    postCcDividend: destination(postJepqDividend ?? 'split'),
+    etfs: [
+      { ticker: 'VOO', kind: 'core', under: 'sp', beta: 1, lev: 1, freq: 4, fee: feeV, div: divV, holding: held[0], basis: cost[0], weight: weights[0], postWeight: post[0] },
+      { ticker: 'QLD', kind: 'core', under: 'ndx', beta: 1, lev: 2, freq: 4, fee: feeQ, div: divQ, holding: held[1], basis: cost[1], weight: weights[1], postWeight: post[1] },
+      { ticker: 'JEPQ', kind: 'cc', under: 'ndx', beta: betaJ, alpha: alphaJ, fee: feeJ, div: divJ, holding: held[2], basis: cost[2], weight: weights[2], postWeight: 0 },
+    ],
+  };
+}
+
 function run(overrides = {}) {
   completed = undefined;
-  sandbox.simulate({ ...base, ...overrides });
+  sandbox.simulate(toEngineConfig({ ...base, ...overrides }));
   assert.ok(completed, 'simulation did not return a result');
   return completed;
 }
@@ -140,15 +163,14 @@ for (let i = 0; i < paired.N; i += 1) {
 }
 
 // QLD daily reset must preserve path dependence.
-const qldTwoDay = (1 + sandbox.qldDailyReturn(0.10, 0, 0))
-  * (1 + sandbox.qldDailyReturn(-0.090909090909, 0, 0)) - 1;
+const qldTwoDay = (1 + sandbox.etfDailyReturn(0.10, 1, 2, 0, 0))
+  * (1 + sandbox.etfDailyReturn(-0.090909090909, 1, 2, 0, 0)) - 1;
 close(qldTwoDay, -0.0181818181816, 1e-10);
 
-// The generic ETF slot reproduces both the plain index fund and the 2x daily-reset fund.
-close(sandbox.etfDailyReturn(0.01, 1, 2, 0.0001, 0.0002), sandbox.qldDailyReturn(0.01, 0.0001, 0.0002), 1e-15);
+// One formula covers the plain index fund and daily-reset leverage; borrowing is charged on the levered part only.
+close(sandbox.etfDailyReturn(0.01, 1, 2, 0.0001, 0.0002), 0.02 - 0.0001 - 0.0002, 1e-15);
 close(sandbox.etfDailyReturn(0.01, 1, 1, 0.0001, 0.0002), 0.0099, 1e-15);
 close(sandbox.etfDailyReturn(0.01, 0.8, 3, 0, 0.001), 0.024 - 0.002, 1e-15);
-assert.throws(() => sandbox.assetModels({ assets: [{ under: 'dow', beta: 1, lev: 1, freq: 4 }, {}, {}] }));
 
 // A chosen broad-market crash is injected in the requested month on every path.
 const stressedVOO = run({ monthly: 0, initial: 1000, stressMonth: 6, stressDrop: 50 });
@@ -295,7 +317,7 @@ const rebalanced = run({ ...transitionConfig, rebal: true });
 close(rebalanced.assetVals[2], transitioned.assetVals[2]);
 close(rebalanced.assetBasis[2], transitioned.assetBasis[2]);
 const protectedState = sandbox.makeState([80, 20, 100]);
-protectedState.protectedAsset = 2;
+protectedState.protected = [false, false, true];
 sandbox.rebalanceState(protectedState, [0.7, 0.3, 0], [0, 1]);
 close(protectedState.h[0], 70);
 close(protectedState.h[1], 30);
@@ -326,6 +348,88 @@ assert.deepEqual(Array.from(stochasticSwitch.switchMonths), Array.from(repeatSwi
 assert.throws(() => run({ ...transitionConfig, postWeights: [0, 0] }), /allocation/);
 assert.throws(() => run({ ...transitionConfig, dividendTarget: 0 }), /target/);
 assert.throws(() => run({ ...transitionConfig, strategyMode: 'month', switchAfterMonths: 1.5 }), /month/);
+
+// --- Any number of ETFs ---------------------------------------------------------
+const quiet = {
+  monthly: 0, initial: 0, years: 1, growth: 0, inflation: 0, reinvest: true, rebal: false, sims: 2, fxOn: false,
+  muQ: 0, volQ: 0, muS: 0, volS: 0, rho: 0, borrow: 0, fxMu: 0, fxVol: 0, fxCorr: 0, whTax: 0, cgTax: 0, deduction: 250, seed: 'multi',
+};
+const etf = (ticker, extra = {}) => ({ ticker, kind: 'core', under: 'sp', beta: 1, lev: 1, freq: 4, fee: 0, div: 0, alpha: 0, holding: 0, weight: 0, postWeight: 0, ...extra });
+const coveredCall = (ticker, extra = {}) => etf(ticker, { kind: 'cc', under: 'ndx', beta: 0.8, div: 12, ...extra });
+function runEtfs(etfs, overrides = {}) {
+  completed = undefined;
+  sandbox.simulate({ ...quiet, ...overrides, etfs });
+  assert.ok(completed, 'simulation did not return a result');
+  return completed;
+}
+
+// A single ETF is a valid portfolio.
+const solo = runEtfs([etf('VOO', { weight: 100 })], { initial: 1000 });
+assert.equal(solo.n, 1);
+close(solo.finGross[0], 1000);
+
+// Five ETFs: new money follows the weights; an ETF that is only held keeps its value and basis.
+const five = runEtfs([
+  etf('A', { weight: 40 }), etf('B', { weight: 30, under: 'ndx' }), etf('C', { weight: 20 }), etf('D', { weight: 10 }),
+  etf('HELD', { holding: 500, basis: 300 }),
+], { monthly: 10 });
+assert.equal(five.n, 5);
+assert.deepEqual(Array.from(five.assetVals.slice(0, 5)).map(v => Math.round(v * 1e6) / 1e6), [48, 36, 24, 12, 500]);
+close(five.assetBasis[4], 300);
+close(five.startValue, 500);
+close(five.investedTotal, 620);
+close(five.annualInvestments[4], 0);
+
+// Leverage is per ETF: 3x falls further than 2x in the same injected crash.
+const crash = { initial: 1000, stressMonth: 6, stressDrop: 50 };
+const twoX = runEtfs([etf('L2', { under: 'ndx', lev: 2, weight: 100 })], crash);
+const threeX = runEtfs([etf('L3', { under: 'ndx', lev: 3, weight: 100 })], crash);
+assert.ok(threeX.finGross[0] > 0 && threeX.finGross[0] < twoX.finGross[0]);
+// A sensitivity of 0.5 halves each daily index move.
+const halfBeta = runEtfs([etf('H', { beta: 0.5, weight: 100 })], { initial: 1000, muS: 21 });
+close(halfBeta.finGross[0], 1000 * (1 + 0.5 * (1.21 ** (1 / 252) - 1)) ** 252, 1e-6);
+
+// Payout frequency is per ETF: a monthly payer loses withholding twelve times a year.
+const monthlyPayer = runEtfs([etf('M', { div: 12, freq: 12, weight: 100 })], { initial: 1000, whTax: 15 });
+close(monthlyPayer.finGross[0], 1000 * (1 - 0.01 * 0.15) ** 12, 1e-6);
+
+// Two covered-call ETFs: the dividend trigger uses their combined net payout (1 + 1 in month 1).
+const twoCc = runEtfs([etf('VOO', { postWeight: 100 }), coveredCall('J1', { weight: 50 }), coveredCall('J2', { weight: 50 })],
+  { monthly: 200, ccDividend: 'self', strategyMode: 'dividend', dividendTarget: 2, postCcDividend: 'split' });
+assert.equal(twoCc.switchMonths[0], 1);
+close(twoCc.switchDividends[0], 2);
+close(twoCc.annualInvestments[0], 2200);
+close(twoCc.annualInvestments[1], 100);
+close(twoCc.annualInvestments[2], 100);
+close(twoCc.assetVals[1], 100 * 0.99 ** 12);
+close(twoCc.assetVals[2], 100 * 0.99 ** 12);
+close(twoCc.finGross[0], 2400);
+// One of them alone pays only 1 in month 1, so it switches a month later.
+const oneCc = runEtfs([etf('VOO', { postWeight: 100 }), coveredCall('J1', { weight: 100 })],
+  { monthly: 100, ccDividend: 'self', strategyMode: 'dividend', dividendTarget: 2, postCcDividend: 'split' });
+assert.equal(oneCc.switchMonths[0], 2);
+
+// Covered-call payouts can go to any one ordinary ETF, or be split by the ordinary ETFs' weights only.
+const toSecond = runEtfs([etf('VOO'), etf('QQQ', { under: 'ndx' }), coveredCall('J', { weight: 100 })], { initial: 1000, ccDividend: 1 });
+close(toSecond.assetVals[0], 0);
+close(toSecond.assetVals[1], 1000 * (1 - 0.99 ** 12));
+const splitCore = runEtfs([etf('A', { weight: 30 }), etf('B', { weight: 10 }), coveredCall('J', { weight: 60, holding: 1000 })], { ccDividend: 'split' });
+close(splitCore.assetVals[0], 0.75 * 1000 * (1 - 0.99 ** 12));
+close(splitCore.assetVals[1], 0.25 * 1000 * (1 - 0.99 ** 12));
+assert.throws(() => runEtfs([etf('A', { weight: 100 }), coveredCall('J')], { ccDividend: 1 }), /destination/);
+assert.throws(() => runEtfs([coveredCall('J', { weight: 100 })], { initial: 100, ccDividend: 'split' }), /required/);
+// Without a covered-call ETF the payout routing is irrelevant.
+close(runEtfs([etf('A', { weight: 100 })], { initial: 100, ccDividend: 'split' }).finGross[0], 100);
+
+// Annual rebalancing moves an ETF that is only held into the contribution weights.
+const soldHeld = runEtfs([etf('A', { weight: 100 }), etf('H', { holding: 500 })], { rebal: true });
+close(soldHeld.assetVals[0], 500);
+close(soldHeld.assetVals[1], 0);
+
+assert.throws(() => runEtfs([]), /ETF list/);
+assert.throws(() => runEtfs([etf('A')], { initial: 100 }), /allocation/);
+assert.throws(() => runEtfs([etf('A', { weight: 100, under: 'dow' })]), /ETF model/);
+assert.throws(() => runEtfs([etf('A', { weight: 100, kind: 'bond' })]), /ETF kind/);
 
 // Full-model smoke test with the page defaults.
 const smoke = run({

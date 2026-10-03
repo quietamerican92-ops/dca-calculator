@@ -2,7 +2,7 @@
   "id": "/dca-calculator/",
   "name": "미국 ETF 적립식 투자 시뮬레이터",
   "short_name": "적립식 계산기",
-  "description": "VOO, QLD, JEPQ 적립식 투자의 세후 결과와 위험을 비교하는 시뮬레이터",
+  "description": "원하는 미국 ETF로 적립식 투자의 세후 결과와 위험을 비교하는 시뮬레이터",
   "lang": "ko",
   "start_url": "/dca-calculator/",
   "scope": "/dca-calculator/",
